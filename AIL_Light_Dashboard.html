@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aeroflex Industries — Multi-Quarter Dashboard FY26</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f8fafc;--surface:#ffffff;--surface2:#f1f5f9;--border:#e2e8f0;
+  --text:#0f172a;--text-muted:#64748b;--text-dim:#475569;
+  --blue:#2563eb;--green:#059669;--gold:#d97706;--red:#dc2626;
+  --purple:#7c3aed;--teal:#0891b2;--slate:#94a3b8;
+  --blue-soft:rgba(37,99,235,0.08);--green-soft:rgba(5,150,105,0.08);
+  --red-soft:rgba(220,38,38,0.08);--gold-soft:rgba(217,119,6,0.08);
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.6;min-height:100vh}
+
+/* SETUP OVERLAY */
+#setup-overlay{position:fixed;inset:0;background:rgba(248,250,252,0.97);z-index:9999;display:flex;align-items:center;justify-content:center}
+#setup-overlay.hidden{display:none}
+.setup-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px;max-width:560px;width:90%;box-shadow:var(--shadow-md)}
+.setup-logo{width:48px;height:48px;background:linear-gradient(135deg,var(--blue),#1d4ed8);border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:24px;color:#fff;margin-bottom:20px}
+.setup-title{font-family:'DM Serif Display',serif;font-size:24px;margin-bottom:8px}
+.setup-sub{color:var(--text-muted);font-size:13px;margin-bottom:24px;line-height:1.6}
+.setup-step{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.setup-step-num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:rgba(59,130,246,0.2);color:var(--blue);font-size:11px;font-weight:700;margin-right:8px}
+.setup-step-text{font-size:13px;color:var(--text-dim);line-height:1.5}
+.setup-step-text strong{color:var(--text)}
+.setup-step-text code{background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:4px;padding:1px 6px;font-size:12px;color:var(--blue);font-family:monospace}
+.setup-input-wrap{margin:18px 0 6px}
+.setup-input-label{font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.setup-input{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s}
+.setup-input:focus{border-color:var(--blue)}
+.setup-input::placeholder{color:var(--text-muted)}
+.setup-btn{width:100%;background:var(--blue);border:none;border-radius:8px;padding:12px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px;transition:background .2s}
+.setup-btn:hover{background:#2563eb}
+.setup-skip{text-align:center;margin-top:12px;font-size:12px;color:var(--text-muted);cursor:pointer}
+.setup-skip:hover{color:var(--text-dim)}
+.setup-err{color:var(--red);font-size:12px;margin-top:6px;display:none}
+
+/* STATUS BAR */
+#status-bar{background:rgba(5,150,105,0.06);border-bottom:1px solid rgba(5,150,105,0.2);padding:6px 32px;display:flex;align-items:center;justify-content:space-between;font-size:12px}
+#status-bar.error{background:rgba(220,38,38,0.06);border-color:rgba(220,38,38,0.2)}
+#status-bar.loading{background:rgba(37,99,235,0.06);border-color:rgba(37,99,235,0.2)}
+#status-bar.hidden{display:none}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px}
+#status-bar.error .status-dot{background:var(--red)}
+#status-bar.loading .status-dot{background:var(--blue);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+#status-text{color:var(--text-muted)}
+#status-change-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:3px 10px;color:var(--text-muted);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif}
+
+/* LIVE BADGE */
+.live-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(5,150,105,0.1);border:1px solid rgba(5,150,105,0.25);border-radius:20px;padding:2px 8px;font-size:10px;color:var(--green);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.live-badge .dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#ffffff 0%,#f0f6ff 100%);border-bottom:2px solid #e2e8f0;padding:0 32px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;height:64px;box-shadow:0 2px 8px rgba(37,99,235,0.06)}
+.header-logo{display:flex;align-items:center;gap:12px}
+.logo-badge{width:36px;height:36px;background:linear-gradient(135deg,var(--blue),#1d4ed8);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:18px;color:#fff}
+.header-title{font-family:'DM Serif Display',serif;font-size:18px;letter-spacing:.02em}
+.header-title span{color:var(--blue)}
+.header-meta{display:flex;align-items:center;gap:16px}
+.header-badge{background:rgba(37,99,235,0.1);border:1px solid rgba(37,99,235,0.25);border-radius:20px;padding:4px 14px;font-size:12px;color:var(--blue);font-weight:600}
+
+/* TICKER */
+.ticker-bar{background:linear-gradient(90deg,#1e40af,#1d4ed8,#2563eb,#1d4ed8,#1e40af);border-bottom:none;padding:8px 0;overflow:hidden}
+.ticker-inner{display:flex;gap:48px;animation:ticker 35s linear infinite;white-space:nowrap;width:max-content}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.ticker-item{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:500}
+.ticker-item .lbl{color:rgba(255,255,255,0.65)}
+.ticker-item .val{color:#ffffff;font-weight:600}
+
+/* NAV */
+.nav{background:var(--surface);border-bottom:2px solid var(--border);padding:0 32px;display:flex;gap:4px;overflow-x:auto}
+.nav-btn{padding:12px 18px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;border-bottom:3px solid transparent;white-space:nowrap;transition:all .2s;margin-bottom:-2px}
+.nav-btn:hover{color:var(--text);background:var(--surface2);border-radius:6px 6px 0 0}
+.nav-btn.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+
+/* QUARTER SELECTOR */
+.qtr-bar{background:#f8fafc;border-bottom:1px solid var(--border);padding:10px 32px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.qtr-label{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-right:4px}
+.qtr-btn{padding:5px 16px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text-muted);cursor:pointer;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .2s;box-shadow:var(--shadow-sm)}
+.qtr-btn:hover{border-color:var(--blue);color:var(--blue);background:#eff6ff}
+.qtr-btn.active{background:var(--blue);border-color:var(--blue);color:#ffffff;box-shadow:0 2px 8px rgba(37,99,235,0.3)}
+.qtr-divider{width:1px;height:20px;background:var(--border)}
+
+/* MAIN */
+.main{max-width:1440px;margin:0 auto;padding:24px 32px}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.section-title{font-family:'DM Serif Display',serif;font-size:20px;color:var(--text);margin-bottom:4px}
+.section-sub{color:var(--text-muted);font-size:12px;margin-bottom:20px;line-height:1.5}
+.kicker{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--blue);margin-bottom:4px}
+
+/* GRIDS */
+.grid-5{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:20px}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;transition:all .2s;box-shadow:var(--shadow-sm)}
+.card:hover{border-color:rgba(37,99,235,0.3);box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:6px}
+.card-value{font-family:'DM Serif Display',serif;font-size:26px;color:var(--text);line-height:1.1}
+.card-value.sm{font-size:20px}
+.card-value.lg{font-size:32px}
+.card-sub{font-size:11px;color:var(--text-muted);margin-top:3px}
+.card-divider{height:1px;background:var(--border);margin:12px 0;opacity:0.6}
+
+/* ALL QUARTERS COMPARISON TABLE */
+.qtr-compare-table{width:100%;border-collapse:collapse;font-size:13px}
+.qtr-compare-table th{text-align:left;padding:10px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);border-bottom:2px solid var(--border);background:var(--surface2)}
+.qtr-compare-table th.right,.qtr-compare-table td.right{text-align:right}
+.qtr-compare-table td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--text-dim)}
+.qtr-compare-table tr:last-child td{border-bottom:none}
+.qtr-compare-table tr:hover td{background:#f0f6ff}
+.qtr-compare-table tr.total-row td{font-weight:700;color:var(--text);border-top:2px solid var(--border);border-bottom:none;background:#f0f6ff}
+.qtr-compare-table tr.section-head td{background:linear-gradient(90deg,rgba(37,99,235,0.08),rgba(37,99,235,0.04));color:var(--blue);font-weight:700;font-size:12px;letter-spacing:.04em}
+.qtr-compare-table td.q3-col{color:var(--text);font-weight:500}
+.qtr-compare-table td.pos{color:var(--green)}
+.qtr-compare-table td.neg{color:var(--red)}
+.tbl-wrap{overflow-x:auto}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:600}
+.badge.up{background:rgba(5,150,105,0.12);color:var(--green);border:1px solid rgba(5,150,105,0.2)}
+.badge.down{background:rgba(220,38,38,0.08);color:var(--red);border:1px solid rgba(220,38,38,0.15)}
+.badge.flat{background:rgba(100,116,139,0.1);color:var(--text-muted);border:1px solid rgba(100,116,139,0.15)}
+.badge.new{background:rgba(217,119,6,0.1);color:var(--gold);border:1px solid rgba(217,119,6,0.2)}
+
+/* STAT ROW */
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
+.stat-row:last-child{border-bottom:none}
+.stat-label{font-size:13px;color:var(--text-dim)}
+.stat-val{font-size:13px;font-weight:600;color:var(--text)}
+
+/* CHART */
+.chart-wrap{position:relative;height:240px}
+.chart-wrap.tall{height:300px}
+.chart-wrap.sm{height:180px}
+.chart-wrap.xs{height:140px}
+
+/* PROGRESS */
+.prog-item{margin-bottom:10px}
+.prog-header{display:flex;justify-content:space-between;margin-bottom:4px}
+.prog-label{font-size:12px;color:var(--text-dim)}
+.prog-val{font-size:12px;font-weight:600;color:var(--text)}
+.prog-track{height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;transition:width 1s ease}
+
+/* INNER TABS */
+.inner-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.inner-tab{padding:6px 16px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text-muted);cursor:pointer;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .2s;box-shadow:var(--shadow-sm)}
+.inner-tab.active{background:var(--blue);border-color:var(--blue);color:#ffffff;box-shadow:0 2px 8px rgba(37,99,235,0.25)}
+
+/* INFO */
+.info-item{padding:10px 0;border-bottom:1px solid var(--border)}
+.info-key{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:2px;font-weight:700}
+.info-val{font-size:13px;color:var(--text);font-weight:500}
+.info-val a{color:var(--blue);text-decoration:none}
+.hl-box{background:linear-gradient(135deg,rgba(37,99,235,0.06),rgba(37,99,235,0.03));border:1px solid rgba(37,99,235,0.2);border-left:4px solid var(--blue);border-radius:10px;padding:14px 18px;margin:16px 0}
+.hl-box-title{font-size:11px;font-weight:600;color:var(--blue);margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em}
+.hl-box-text{font-size:12px;color:var(--text-dim);line-height:1.6}
+
+/* CAPEX */
+.capex-item{padding:12px 0;border-bottom:1px solid var(--border)}
+.capex-item:last-child{border-bottom:none}
+.capex-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:5px}
+.capex-meta{display:flex;gap:14px;margin-bottom:7px;flex-wrap:wrap}
+.capex-tag{font-size:11px}
+.capex-bar-wrap{display:flex;align-items:center;gap:10px}
+.capex-bar-track{flex:1;height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden}
+.capex-bar-fill{height:100%;border-radius:2px}
+
+/* DIR GRID */
+.dir-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.dir-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;box-shadow:var(--shadow-sm);transition:all .2s}
+.dir-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px}
+.dir-role{font-size:11px;color:var(--blue);margin-bottom:6px;font-weight:500}
+.dir-bio{font-size:11px;color:var(--text-muted);line-height:1.5}
+
+/* PROD DEV */
+.prod-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:10px;display:flex;gap:14px;box-shadow:var(--shadow-sm);transition:all .2s}
+.prod-num{width:28px;height:28px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.prod-info{flex:1}
+.prod-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px}
+.prod-field{font-size:11px;color:var(--blue);margin-bottom:5px;font-weight:500}
+.prod-desc{font-size:12px;color:var(--text-muted);line-height:1.5}
+
+/* SH */
+.sh-list{display:flex;flex-direction:column;gap:9px;margin-top:14px}
+.sh-item{display:flex;align-items:center;gap:10px}
+.sh-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.sh-name{flex:1;font-size:12px;color:var(--text-muted)}
+.sh-pct{font-size:13px;font-weight:600;color:var(--text)}
+
+/* HIGHLIGHTED Q3 column */
+.q3-highlight{background:rgba(37,99,235,0.05)}
+
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#f1f5f9}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#94a3b8}
+
+@media(max-width:1000px){
+  .grid-5{grid-template-columns:repeat(3,1fr)}
+  .grid-4{grid-template-columns:repeat(2,1fr)}
+  .grid-3{grid-template-columns:1fr 1fr}
+  .dir-grid{grid-template-columns:1fr 1fr}
+  .main{padding:16px}
+  .header{padding:0 16px}
+  .nav{padding:0 16px}
+  .qtr-bar{padding:10px 16px}
+}
+
+/* ── LIGHT THEME EXTRA POLISH ── */
+.section-title{border-left:3px solid var(--blue);padding-left:12px}
+.kicker{letter-spacing:.14em}
+.card-value{color:#0f172a}
+.qtr-label{color:#94a3b8;font-size:10px}
+
+/* header accent line */
+.header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--blue),#7c3aed,var(--teal));opacity:0.7}
+.header{position:sticky;overflow:hidden}
+
+/* nav active pill effect */
+.nav-btn.active{background:rgba(37,99,235,0.06);border-radius:6px 6px 0 0}
+
+/* table striping */
+.qtr-compare-table tbody tr:nth-child(even) td{background:rgba(241,245,249,0.5)}
+.qtr-compare-table tbody tr:nth-child(even):hover td{background:#f0f6ff}
+
+/* card value accent */
+.card .card-value{background:linear-gradient(135deg,#0f172a,#1e40af);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.card .card-value.sm{background:linear-gradient(135deg,#0f172a,#1e40af);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* status change btn */
+#status-change-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:6px;padding:3px 10px;color:var(--text-muted);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif}
+#status-change-btn:hover{border-color:var(--blue);color:var(--blue)}
+
+/* ticker badge override for dark bg */
+.ticker-bar .badge.up{background:rgba(255,255,255,0.15);color:#86efac;border-color:rgba(255,255,255,0.2)}
+.ticker-bar .badge.down{background:rgba(255,255,255,0.1);color:#fca5a5;border-color:rgba(255,255,255,0.15)}
+
+/* dir card hover */
+.dir-card:hover{box-shadow:var(--shadow-md);border-color:rgba(37,99,235,0.3);transform:translateY(-1px)}
+.prod-card:hover{box-shadow:var(--shadow-md);border-color:rgba(37,99,235,0.3)}
+
+/* main padding tweak */
+.main{padding-top:28px}
+
+</style>
+</head>
+<body>
+
+<!-- SETUP OVERLAY -->
+<div id="setup-overlay">
+  <div class="setup-box">
+    <div class="setup-logo">A</div>
+    <div class="setup-title">Connect Your Google Sheet</div>
+    <div class="setup-sub">This dashboard pulls live data across all quarters — Q1, Q2, Q3, H1, 9M FY26 — directly from your Google Sheet and auto-refreshes every 5 minutes.</div>
+    <div class="setup-step"><span class="setup-step-num">1</span><span class="setup-step-text">Open your Excel in <strong>Google Sheets</strong> (drive.google.com → New → File upload → Open with Sheets)</span></div>
+    <div class="setup-step"><span class="setup-step-num">2</span><span class="setup-step-text">Go to <strong>File → Share → Publish to web</strong> → leave as "Entire Document" + "Web page" → click <strong>Publish</strong></span></div>
+    <div class="setup-step"><span class="setup-step-num">3</span><span class="setup-step-text">Copy your Sheet ID from the browser URL: <code>docs.google.com/spreadsheets/d/<strong>THIS_PART</strong>/edit</code></span></div>
+    <div class="setup-input-wrap">
+      <div class="setup-input-label">Sheet ID (or paste the full URL)</div>
+      <input class="setup-input" id="sheet-id-input" type="text" placeholder="e.g. 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms"/>
+      <div class="setup-err" id="setup-err">⚠ Could not connect. Check your Sheet ID and make sure the sheet is published.</div>
+    </div>
+    <button class="setup-btn" onclick="connectSheet()">🔗 Connect & Load Dashboard</button>
+    <div class="setup-skip" onclick="skipSetup()">Skip — use static data</div>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div id="status-bar" class="hidden">
+  <div style="display:flex;align-items:center;gap:8px"><span class="status-dot"></span><span id="status-text">Connecting…</span></div>
+  <button id="status-change-btn" onclick="showSetup()">Change Sheet</button>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-logo">
+    <div class="logo-badge">A</div>
+    <div><div class="header-title">Aeroflex <span>Industries</span> Ltd.</div></div>
+  </div>
+  <div class="header-meta">
+    <span id="live-mode-badge" style="display:none" class="live-badge"><span class="dot"></span>Live</span>
+    <div class="header-badge">FY26 Dashboard</div>
+    <div id="live-last-updated" style="color:var(--text-muted);font-size:12px;font-weight:500">As on 28 Jan 2026</div>
+  </div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker-bar"><div class="ticker-inner">
+  <span class="ticker-item"><span class="lbl">NSE/BSE</span><span class="val">AEROFLEX | 543972</span></span>
+  <span class="ticker-item"><span class="lbl">Q3 Revenue</span><span class="val" id="tk-rev-q3">₹120.9 Cr</span><span class="badge up" id="tk-rev-q3-yoy">+21.1%</span></span>
+  <span class="ticker-item"><span class="lbl">Q2 Revenue</span><span class="val" id="tk-rev-q2">₹110.9 Cr</span><span class="badge up" id="tk-rev-q2-yoy">+14.4%</span></span>
+  <span class="ticker-item"><span class="lbl">Q1 Revenue</span><span class="val" id="tk-rev-q1">₹84.7 Cr</span><span class="badge down" id="tk-rev-q1-yoy">−7.3%</span></span>
+  <span class="ticker-item"><span class="lbl">9M Revenue</span><span class="val" id="tk-rev-9m">₹316.1 Cr</span><span class="badge up" id="tk-rev-9m-yoy">+11.1%</span></span>
+  <span class="ticker-item"><span class="lbl">Q3 EBITDA Margin</span><span class="val" id="tk-em-q3">23.6%</span><span class="badge up">+141bps</span></span>
+  <span class="ticker-item"><span class="lbl">Q2 EBITDA Margin</span><span class="val" id="tk-em-q2">23.5%</span><span class="badge up">+136bps</span></span>
+  <span class="ticker-item"><span class="lbl">Q3 PAT</span><span class="val" id="tk-pat-q3">₹16.5 Cr</span><span class="badge up">+8.4%</span></span>
+  <span class="ticker-item"><span class="lbl">Export Share Q3</span><span class="val" id="tk-export">73.7%</span></span>
+  <span class="ticker-item"><span class="lbl">Mkt Cap</span><span class="val">₹2,122 Cr</span></span>
+  <!-- duplicate for loop -->
+  <span class="ticker-item"><span class="lbl">NSE/BSE</span><span class="val">AEROFLEX | 543972</span></span>
+  <span class="ticker-item"><span class="lbl">Q3 Revenue</span><span class="val">₹120.9 Cr</span><span class="badge up">+21.1%</span></span>
+  <span class="ticker-item"><span class="lbl">Q2 Revenue</span><span class="val">₹110.9 Cr</span><span class="badge up">+14.4%</span></span>
+  <span class="ticker-item"><span class="lbl">Q1 Revenue</span><span class="val">₹84.7 Cr</span><span class="badge down">−7.3%</span></span>
+  <span class="ticker-item"><span class="lbl">9M Revenue</span><span class="val">₹316.1 Cr</span><span class="badge up">+11.1%</span></span>
+  <span class="ticker-item"><span class="lbl">Q3 EBITDA Margin</span><span class="val">23.6%</span><span class="badge up">+141bps</span></span>
+</div></div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="switchTab('summary',this)">📊 Summary</button>
+  <button class="nav-btn" onclick="switchTab('allquarters',this)">📅 All Quarters</button>
+  <button class="nav-btn" onclick="switchTab('financials',this)">💹 Financials</button>
+  <button class="nav-btn" onclick="switchTab('sales',this)">📦 Sales Mix</button>
+  <button class="nav-btn" onclick="switchTab('geography',this)">🌍 Geography</button>
+  <button class="nav-btn" onclick="switchTab('operations',this)">🏭 Operations</button>
+  <button class="nav-btn" onclick="switchTab('capex',this)">🔧 Capex</button>
+  <button class="nav-btn" onclick="switchTab('ratios',this)">📐 Ratios</button>
+  <button class="nav-btn" onclick="switchTab('history',this)">📈 Historical</button>
+  <button class="nav-btn" onclick="switchTab('company',this)">🏢 Company</button>
+</div>
+
+<!-- QUARTER SELECTOR BAR — drives context-sensitive views -->
+<div class="qtr-bar">
+  <span class="qtr-label">View Quarter:</span>
+  <button class="qtr-btn active" onclick="selectQtr('Q3FY26',this)">Q3 FY26</button>
+  <button class="qtr-btn" onclick="selectQtr('Q2FY26',this)">Q2 FY26</button>
+  <button class="qtr-btn" onclick="selectQtr('Q1FY26',this)">Q1 FY26</button>
+  <div class="qtr-divider"></div>
+  <button class="qtr-btn" onclick="selectQtr('9MFY26',this)">9M FY26</button>
+  <button class="qtr-btn" onclick="selectQtr('H1FY26',this)">H1 FY26</button>
+</div>
+
+<!-- ===================== MAIN ===================== -->
+<div class="main">
+
+<!-- ── SUMMARY TAB ── -->
+<div class="tab-content active" id="tab-summary">
+  <div class="kicker">FY26 Performance — All Quarters at a Glance</div>
+  <h2 class="section-title">Executive Summary</h2>
+  <p class="section-sub">Consolidated results · Select a quarter above to highlight that period's KPIs</p>
+
+  <!-- 5 KPI cards — one per period -->
+  <div class="grid-5">
+    <div class="card q3-highlight">
+      <div class="card-title" style="color:var(--blue)" id="sum-selected-qtr-title">Q3 FY26</div>
+      <div class="card-value" id="sum-rev-q3">₹120.9 Cr</div>
+      <div class="card-sub">Revenue</div>
+      <div class="card-divider"></div>
+      <div class="stat-row" style="padding:5px 0"><span style="font-size:12px;color:var(--text-muted)">EBITDA</span><span style="font-size:12px;font-weight:600;color:var(--green)" id="sum-ebitda-q3">₹28.6 Cr</span></div>
+      <div class="stat-row" style="padding:5px 0"><span style="font-size:12px;color:var(--text-muted)">PAT</span><span style="font-size:12px;font-weight:600" id="sum-pat-q3">₹16.5 Cr</span></div>
+      <div class="stat-row" style="padding:5px 0"><span style="font-size:12px;color:var(--text-muted)">EBITDA %</span><span style="font-size:12px;font-weight:600;color:var(--green)" id="sum-em-q3">23.6%</span></div>
+      <div style="margin-top:8px"><span class="badge up" id="sum-rev-q3-yoy">↑ 21.1% YoY</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Q2 FY26</div>
+      <div class="card-value" id="sum-rev-q2">₹110.9 Cr</div>
+      <div class="card-sub">Revenue</div>
+      <div class="card-divider"></div>
+      <div class="stat-row" style="padding:5px 0"><span style="font-size:12px;color:var(--text-muted)">EBITDA</span><span style="font-size:12px;font-weight:600;color:var(--green)" id="sum-ebitda-q2">₹26.1 Cr</span></div>
+      <div class="stat-row" style="padding:5px 0"><span style="font-size:12px;color:var(--text-muted)">PAT</span><span style="font-size:12px;font-weight:600" id="sum-pat-q2">₹14.2 Cr</span></div>
+      <div class="stat-row" style="padding:5px 0"><span style="font-size:12px;color:var(--text-muted)">EBITDA %</span><span style="font-size:12px;font-weight:600;color:var(--green)" id="sum-em-q2">23.5%</span></div>
+      <div style="margin-top:8px"><span class="badge up" id="sum-rev-q2-yoy">↑ 14.4% YoY</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Q1 FY26</div>
+      <div class="card-value" id="sum-rev-q1">₹84.7 Cr</div>
+      <div class="card-sub">Revenue</div>
+      <div class="card-divider"></div>
+      <div class="stat-row" style="padding:5px 0"><span style="font-size:12px;color:var(--text-muted)">EBITDA</span><span style="font-size:12px;font-weight:600;color:var(--gold)" id="sum-ebitda-q1">₹15.8 Cr</span></div>
+      <div class="stat-row" style="padding:5px 0"><span style="font-size:12px;color:var(--text-muted)">PAT</span><span style="font-size:12px;font-weight:600" id="sum-pat-q1">₹7.2 Cr</span></div>
+      <div class="stat-row" style="padding:5px 0"><span style="font-size:12px;color:var(--text-muted)">EBITDA %</span><span style="font-size:12px;font-weight:600;color:var(--gold)" id="sum-em-q1">18.7%</span></div>
+      <div style="margin-top:8px"><span class="badge down" id="sum-rev-q1-yoy">↓ 7.3% YoY</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">H1 FY26</div>
+      <div class="card-value" id="sum-rev-h1">₹195.5 Cr</div>
+      <div class="card-sub">Revenue</div>
+      <div class="card-divider"></div>
+      <div class="stat-row" style="padding:5px 0"><span style="font-size:12px;color:var(--text-muted)">EBITDA</span><span style="font-size:12px;font-weight:600" id="sum-ebitda-h1">₹41.9 Cr</span></div>
+      <div class="stat-row" style="padding:5px 0"><span style="font-size:12px;color:var(--text-muted)">PAT</span><span style="font-size:12px;font-weight:600" id="sum-pat-h1">₹21.4 Cr</span></div>
+      <div class="stat-row" style="padding:5px 0"><span style="font-size:12px;color:var(--text-muted)">EBITDA %</span><span style="font-size:12px;font-weight:600" id="sum-em-h1">21.4%</span></div>
+      <div style="margin-top:8px"><span class="badge up" id="sum-rev-h1-yoy">↑ 4.9% YoY</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">9M FY26</div>
+      <div class="card-value" id="sum-rev-9m">₹316.1 Cr</div>
+      <div class="card-sub">Revenue</div>
+      <div class="card-divider"></div>
+      <div class="stat-row" style="padding:5px 0"><span style="font-size:12px;color:var(--text-muted)">EBITDA</span><span style="font-size:12px;font-weight:600;color:var(--green)" id="sum-ebitda-9m">₹70.4 Cr</span></div>
+      <div class="stat-row" style="padding:5px 0"><span style="font-size:12px;color:var(--text-muted)">PAT</span><span style="font-size:12px;font-weight:600" id="sum-pat-9m">₹37.9 Cr</span></div>
+      <div class="stat-row" style="padding:5px 0"><span style="font-size:12px;color:var(--text-muted)">EBITDA %</span><span style="font-size:12px;font-weight:600;color:var(--green)" id="sum-em-9m">22.2%</span></div>
+      <div style="margin-top:8px"><span class="badge up" id="sum-rev-9m-yoy">↑ 11.1% YoY</span></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Revenue Trend — All Quarters FY26 vs FY25 (₹ Cr)</div>
+      <div class="chart-wrap"><canvas id="revTrendChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">EBITDA Margin Trend — All Quarters (%)</div>
+      <div class="chart-wrap"><canvas id="marginTrendChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title">PAT & Cash PAT Trend (₹ Cr)</div>
+      <div class="chart-wrap sm"><canvas id="patTrendChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Export vs Domestic — FY26 Quarters</div>
+      <div class="chart-wrap sm"><canvas id="expDomTrendChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Market Snapshot</div>
+      <div class="stat-row"><span class="stat-label">Market Cap</span><span class="stat-val">₹2,122 Cr</span></div>
+      <div class="stat-row"><span class="stat-label">P/E</span><span class="stat-val">44.3×</span></div>
+      <div class="stat-row"><span class="stat-label">Book Value/Share</span><span class="stat-val">₹27.8</span></div>
+      <div class="stat-row"><span class="stat-label">Promoter Holding</span><span class="stat-val" style="color:var(--blue)">67.0%</span></div>
+      <div class="stat-row"><span class="stat-label">DII Holding</span><span class="stat-val">3.6%</span></div>
+      <div class="stat-row"><span class="stat-label">FII Holding</span><span class="stat-val">1.0%</span></div>
+      <div class="stat-row"><span class="stat-label">Public</span><span class="stat-val">28.5%</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ALL QUARTERS COMPARISON TAB ── -->
+<div class="tab-content" id="tab-allquarters">
+  <div class="kicker">Side-by-Side Quarter Comparison</div>
+  <h2 class="section-title">All Quarters — FY26</h2>
+  <p class="section-sub">Q1, Q2, Q3, H1, 9M FY26 vs prior year periods · INR in Crores</p>
+
+  <div class="card tbl-wrap" style="margin-bottom:20px">
+    <table class="qtr-compare-table">
+      <thead>
+        <tr>
+          <th style="min-width:200px">Metric (₹ Crores)</th>
+          <th class="right q3-highlight">Q3 FY26</th><th class="right">Q3 FY25</th><th class="right">YoY %</th>
+          <th class="right" style="border-left:1px solid #e2e8f0">Q2 FY26</th><th class="right">Q2 FY25</th><th class="right">YoY %</th>
+          <th class="right" style="border-left:1px solid #e2e8f0">Q1 FY26</th><th class="right">Q1 FY25</th><th class="right">YoY %</th>
+          <th class="right" style="border-left:1px solid #e2e8f0">9M FY26</th><th class="right">9M FY25</th><th class="right">YoY %</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="section-head"><td colspan="13">Sales (₹ Crores)</td></tr>
+        <tr>
+          <td>SS Hoses &amp; Braiding</td>
+          <td class="right q3-col q3-highlight" id="aq-hose-q3">52.9</td><td class="right">43.6</td><td class="right pos" id="aq-hose-q3-yoy">+21.5%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-hose-q2">49.9</td><td class="right">50.0</td><td class="right neg" id="aq-hose-q2-yoy">−0.2%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-hose-q1">37.8</td><td class="right">50.9</td><td class="right neg" id="aq-hose-q1-yoy">−25.6%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-hose-9m">140.7</td><td class="right">144.4</td><td class="right neg" id="aq-hose-9m-yoy">−2.6%</td>
+        </tr>
+        <tr>
+          <td>Assemblies &amp; Fittings</td>
+          <td class="right q3-col q3-highlight" id="aq-asm-q3">52.0</td><td class="right">51.1</td><td class="right pos" id="aq-asm-q3-yoy">+1.6%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-asm-q2">44.9</td><td class="right">40.3</td><td class="right pos" id="aq-asm-q2-yoy">+11.4%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-asm-q1">37.5</td><td class="right">35.6</td><td class="right pos" id="aq-asm-q1-yoy">+5.3%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-asm-9m">134.4</td><td class="right">127.1</td><td class="right pos" id="aq-asm-9m-yoy">+5.8%</td>
+        </tr>
+        <tr>
+          <td>Hyd Air</td>
+          <td class="right q3-col q3-highlight" id="aq-hyd-q3">8.2</td><td class="right">2.9</td><td class="right pos">+181%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-hyd-q2">9.2</td><td class="right">1.5</td><td class="right pos">+531%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-hyd-q1">5.1</td><td class="right">1.4</td><td class="right pos">+257%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-hyd-9m">22.5</td><td class="right">5.8</td><td class="right pos">+288%</td>
+        </tr>
+        <tr>
+          <td>Bellows</td>
+          <td class="right q3-col q3-highlight" id="aq-bw-q3">2.3</td><td class="right">—</td><td class="right"><span class="badge new">NEW</span></td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-bw-q2">1.0</td><td class="right">—</td><td class="right"><span class="badge new">NEW</span></td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-bw-q1">1.0</td><td class="right">—</td><td class="right"><span class="badge new">NEW</span></td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-bw-9m">4.3</td><td class="right">—</td><td class="right"><span class="badge new">NEW</span></td>
+        </tr>
+        <tr>
+          <td>Pipe Skid (Data Centre)</td>
+          <td class="right q3-col q3-highlight" id="aq-dc-q3">2.3</td><td class="right">—</td><td class="right"><span class="badge new">NEW</span></td>
+          <td class="right" style="border-left:1px solid #e2e8f0">—</td><td class="right">—</td><td class="right">—</td>
+          <td class="right" style="border-left:1px solid #e2e8f0">—</td><td class="right">—</td><td class="right">—</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-dc-9m">2.3</td><td class="right">—</td><td class="right"><span class="badge new">NEW</span></td>
+        </tr>
+        <tr class="total-row">
+          <td>Total Revenue</td>
+          <td class="right q3-highlight" id="aq-rev-q3">117.7</td><td class="right">97.6</td><td class="right pos" id="aq-rev-q3-yoy">+20.6%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-rev-q2">105.0</td><td class="right">91.8</td><td class="right pos" id="aq-rev-q2-yoy">+14.4%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-rev-q1">81.5</td><td class="right">87.9</td><td class="right neg" id="aq-rev-q1-yoy">−7.3%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-rev-9m">304.2</td><td class="right">277.3</td><td class="right pos" id="aq-rev-9m-yoy">+9.7%</td>
+        </tr>
+
+        <tr class="section-head"><td colspan="13">Financials (₹ Crores)</td></tr>
+        <tr>
+          <td>Total Income</td>
+          <td class="right q3-col q3-highlight" id="aq-ti-q3">121.1</td><td class="right">100.4</td><td class="right pos" id="aq-ti-q3-yoy">+20.7%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-ti-q2">111.1</td><td class="right">95.8</td><td class="right pos" id="aq-ti-q2-yoy">+15.9%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-ti-q1">84.7</td><td class="right">90.8</td><td class="right neg" id="aq-ti-q1-yoy">−6.7%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-ti-9m">316.8</td><td class="right">286.9</td><td class="right pos" id="aq-ti-9m-yoy">+10.4%</td>
+        </tr>
+        <tr class="total-row">
+          <td>EBITDA</td>
+          <td class="right q3-highlight" id="aq-ebitda-q3">28.6</td><td class="right">22.3</td><td class="right pos" id="aq-ebitda-q3-yoy">+28.3%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-ebitda-q2">26.1</td><td class="right">21.2</td><td class="right pos" id="aq-ebitda-q2-yoy">+23.1%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-ebitda-q1">15.8</td><td class="right">19.1</td><td class="right neg" id="aq-ebitda-q1-yoy">−17.3%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-ebitda-9m">70.4</td><td class="right">62.6</td><td class="right pos" id="aq-ebitda-9m-yoy">+12.6%</td>
+        </tr>
+        <tr>
+          <td style="color:var(--text-muted);font-size:12px">EBITDA Margin</td>
+          <td class="right q3-highlight" style="color:var(--green)" id="aq-em-q3">23.6%</td><td class="right">22.2%</td><td class="right pos">+141bps</td>
+          <td class="right" style="border-left:1px solid #e2e8f0;color:var(--green)" id="aq-em-q2">23.5%</td><td class="right">22.1%</td><td class="right pos">+136bps</td>
+          <td class="right" style="border-left:1px solid #e2e8f0;color:var(--gold)" id="aq-em-q1">18.7%</td><td class="right">21.1%</td><td class="right neg">−240bps</td>
+          <td class="right" style="border-left:1px solid #e2e8f0;color:var(--green)" id="aq-em-9m">22.2%</td><td class="right">21.8%</td><td class="right pos">+43bps</td>
+        </tr>
+        <tr>
+          <td>PBT</td>
+          <td class="right q3-col q3-highlight" id="aq-pbt-q3">22.1</td><td class="right">19.7</td><td class="right pos" id="aq-pbt-q3-yoy">+12.3%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-pbt-q2">19.7</td><td class="right">18.7</td><td class="right pos" id="aq-pbt-q2-yoy">+5.6%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-pbt-q1">9.7</td><td class="right">16.7</td><td class="right neg" id="aq-pbt-q1-yoy">−41.9%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-pbt-9m">51.5</td><td class="right">55.0</td><td class="right neg" id="aq-pbt-9m-yoy">−6.4%</td>
+        </tr>
+        <tr>
+          <td style="color:var(--text-muted);font-size:12px">PBT Margin</td>
+          <td class="right q3-highlight" style="color:var(--green)" id="aq-pbm-q3">18.2%</td><td class="right">19.6%</td><td class="right neg">−136bps</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-pbm-q2">17.8%</td><td class="right">19.5%</td><td class="right neg">−173bps</td>
+          <td class="right" style="border-left:1px solid #e2e8f0;color:var(--red)" id="aq-pbm-q1">11.5%</td><td class="right">18.4%</td><td class="right neg">−692bps</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-pbm-9m">16.3%</td><td class="right">19.2%</td><td class="right neg">−292bps</td>
+        </tr>
+        <tr class="total-row">
+          <td>PAT</td>
+          <td class="right q3-highlight" id="aq-pat-q3">16.5</td><td class="right">15.2</td><td class="right pos" id="aq-pat-q3-yoy">+8.4%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-pat-q2">14.2</td><td class="right">13.7</td><td class="right pos" id="aq-pat-q2-yoy">+4.2%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-pat-q1">7.2</td><td class="right">12.4</td><td class="right neg" id="aq-pat-q1-yoy">−42.2%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-pat-9m">37.9</td><td class="right">41.3</td><td class="right neg" id="aq-pat-9m-yoy">−8.2%</td>
+        </tr>
+        <tr>
+          <td style="color:var(--text-muted);font-size:12px">PAT Margin</td>
+          <td class="right q3-highlight" style="color:var(--green)" id="aq-pm-q3">13.6%</td><td class="right">15.2%</td><td class="right neg">−154bps</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-pm-q2">12.8%</td><td class="right">14.3%</td><td class="right neg">−144bps</td>
+          <td class="right" style="border-left:1px solid #e2e8f0;color:var(--red)" id="aq-pm-q1">8.5%</td><td class="right">13.7%</td><td class="right neg">−520bps</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-pm-9m">12.0%</td><td class="right">14.5%</td><td class="right neg">−242bps</td>
+        </tr>
+        <tr>
+          <td>Cash PAT</td>
+          <td class="right q3-col q3-highlight" id="aq-cp-q3">22.8</td><td class="right">17.7</td><td class="right pos">+28.4%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-cp-q2">20.3</td><td class="right">16.1</td><td class="right pos">+26.4%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-cp-q1">13.1</td><td class="right">14.8</td><td class="right neg">−11.4%</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-cp-9m">56.2</td><td class="right">48.6</td><td class="right pos">+15.6%</td>
+        </tr>
+        <tr>
+          <td style="color:var(--text-muted);font-size:12px">Cash PAT Margin</td>
+          <td class="right q3-highlight" style="color:var(--green)" id="aq-cpm-q3">18.8%</td><td class="right">17.7%</td><td class="right pos">+113bps</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-cpm-q2">18.3%</td><td class="right">16.8%</td><td class="right pos">+152bps</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-cpm-q1">15.5%</td><td class="right">16.3%</td><td class="right neg">−82bps</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-cpm-9m">17.7%</td><td class="right">16.9%</td><td class="right pos">+80bps</td>
+        </tr>
+
+        <tr class="section-head"><td colspan="13">Product Mix (%)</td></tr>
+        <tr>
+          <td>SS Hoses &amp; Braiding</td>
+          <td class="right q3-highlight" id="aq-hm-q3">45.0%</td><td class="right">44.6%</td><td class="right">—</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-hm-q2">47.5%</td><td class="right">54.5%</td><td class="right">—</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-hm-q1">46.4%</td><td class="right">57.9%</td><td class="right">—</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-hm-9m">46.2%</td><td class="right">52.1%</td><td class="right">—</td>
+        </tr>
+        <tr>
+          <td>Assemblies &amp; Fittings</td>
+          <td class="right q3-highlight" id="aq-am-q3">44.2%</td><td class="right">52.4%</td><td class="right">—</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-am-q2">42.8%</td><td class="right">43.9%</td><td class="right">—</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-am-q1">46.0%</td><td class="right">40.5%</td><td class="right">—</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-am-9m">44.2%</td><td class="right">45.8%</td><td class="right">—</td>
+        </tr>
+        <tr>
+          <td>Hyd Air</td>
+          <td class="right q3-highlight" id="aq-hydm-q3">6.9%</td><td class="right">3.0%</td><td class="right">—</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-hydm-q2">8.7%</td><td class="right">1.6%</td><td class="right">—</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-hydm-q1">6.3%</td><td class="right">1.6%</td><td class="right">—</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-hydm-9m">7.4%</td><td class="right">2.1%</td><td class="right">—</td>
+        </tr>
+
+        <tr class="section-head"><td colspan="13">Export / Domestic Split</td></tr>
+        <tr>
+          <td>Export %</td>
+          <td class="right q3-highlight" style="color:var(--blue)" id="aq-exp-q3">73.7%</td><td class="right">68.2%</td><td class="right">—</td>
+          <td class="right" style="border-left:1px solid #e2e8f0;color:var(--blue)" id="aq-exp-q2">73.6%</td><td class="right">81.8%</td><td class="right">—</td>
+          <td class="right" style="border-left:1px solid #e2e8f0;color:var(--blue)" id="aq-exp-q1">71.7%</td><td class="right">80.8%</td><td class="right">—</td>
+          <td class="right" style="border-left:1px solid #e2e8f0;color:var(--blue)" id="aq-exp-9m">73.1%</td><td class="right">76.7%</td><td class="right">—</td>
+        </tr>
+        <tr>
+          <td>Domestic %</td>
+          <td class="right q3-highlight" id="aq-dom-q3">26.3%</td><td class="right">31.8%</td><td class="right">—</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-dom-q2">26.4%</td><td class="right">18.2%</td><td class="right">—</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-dom-q1">28.3%</td><td class="right">19.2%</td><td class="right">—</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="aq-dom-9m">26.9%</td><td class="right">23.3%</td><td class="right">—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="hl-box">
+    <div class="hl-box-title">Key Quarterly Trends to Note</div>
+    <div class="hl-box-text">
+      <strong>Q1 FY26 was a soft quarter</strong> — Revenue down 7.3% YoY, PAT down 42%, EBITDA margin compressed to 18.7%. This was due to muted hose volume, lower SS hose revenue (−25.6% YoY) and elevated D&A from new capex. <strong>Q2 and Q3 showed strong recovery</strong> — EBITDA margins expanded to 23.5% and 23.6% respectively, with Q3 revenue surging 21.1% YoY. <strong>New products (Bellows, Pipe Skid, Data Centre)</strong> started contributing from Q3 FY26.
+    </div>
+  </div>
+</div>
+
+<!-- ── FINANCIALS TAB ── -->
+<div class="tab-content" id="tab-financials">
+  <div class="kicker">P&L — Quarter View</div>
+  <h2 class="section-title">Financial Results</h2>
+  <p class="section-sub">INR in Lakhs · Use the quarter selector above to change view · Q3FY26 column highlighted</p>
+  <div class="inner-tabs">
+    <button class="inner-tab active" onclick="showFinTab('q3q',this)">Q3 FY26</button>
+    <button class="inner-tab" onclick="showFinTab('q2q',this)">Q2 FY26</button>
+    <button class="inner-tab" onclick="showFinTab('q1q',this)">Q1 FY26</button>
+    <button class="inner-tab" onclick="showFinTab('9mq',this)">9M FY26</button>
+    <button class="inner-tab" onclick="showFinTab('h1q',this)">H1 FY26</button>
+  </div>
+
+  <!-- Q3 -->
+  <div id="fin-q3q">
+    <div class="grid-4" style="margin-bottom:18px">
+      <div class="card"><div class="card-title">Revenue</div><div class="card-value sm" id="f3-rev">12,089</div><div class="card-sub">₹ Lakhs Q3FY26</div><div style="margin-top:6px"><span class="badge up" id="f3-rev-yoy">+21.1% YoY</span> <span class="badge flat" id="f3-rev-qoq">+9.0% QoQ</span></div></div>
+      <div class="card"><div class="card-title">EBITDA</div><div class="card-value sm" id="f3-ebitda">2,858</div><div class="card-sub">Margin <span id="f3-em" style="color:var(--green)">23.6%</span></div><div style="margin-top:6px"><span class="badge up" id="f3-ebitda-yoy">+28.3% YoY</span></div></div>
+      <div class="card"><div class="card-title">PBT</div><div class="card-value sm" id="f3-pbt">2,208</div><div class="card-sub">Margin <span id="f3-pbm">18.2%</span></div><div style="margin-top:6px"><span class="badge up" id="f3-pbt-yoy">+12.3% YoY</span></div></div>
+      <div class="card"><div class="card-title">PAT</div><div class="card-value sm" id="f3-pat">1,649</div><div class="card-sub">Margin <span id="f3-pm" style="color:var(--green)">13.6%</span></div><div style="margin-top:6px"><span class="badge up" id="f3-pat-yoy">+8.4% YoY</span></div></div>
+    </div>
+    <div class="card tbl-wrap">
+      <table class="qtr-compare-table">
+        <thead><tr><th style="width:35%">Particulars (₹ Lakhs)</th><th class="right">Q3 FY26</th><th class="right">Q2 FY26</th><th class="right">Q3 FY25</th><th class="right">YoY</th><th class="right">QoQ</th></tr></thead>
+        <tbody>
+          <tr><td>Revenue from Operations</td><td class="right q3-col" id="t3-rev">12,089</td><td class="right" id="t3-rev-q2">11,087</td><td class="right" id="t3-rev-py">9,980</td><td class="right pos" id="t3-rev-yoy">+21.1%</td><td class="right pos" id="t3-rev-qoq">+9.0%</td></tr>
+          <tr><td>Other Income</td><td class="right" id="t3-oi">23</td><td class="right">18</td><td class="right">57</td><td class="right neg">−60.5%</td><td class="right pos">+25.1%</td></tr>
+          <tr><td>Total Income</td><td class="right q3-col" id="t3-ti">12,112</td><td class="right">11,105</td><td class="right">10,037</td><td class="right pos">+20.7%</td><td class="right pos">+9.1%</td></tr>
+          <tr><td>Material Cost</td><td class="right" id="t3-mat">6,730</td><td class="right">6,230</td><td class="right">6,003</td><td class="right">—</td><td class="right">—</td></tr>
+          <tr><td>Employee Cost</td><td class="right" id="t3-emp">1,132</td><td class="right">1,082</td><td class="right">921</td><td class="right">—</td><td class="right">—</td></tr>
+          <tr><td>Other Expenses</td><td class="right" id="t3-oth">1,392</td><td class="right">1,187</td><td class="right">887</td><td class="right">—</td><td class="right">—</td></tr>
+          <tr class="total-row"><td>EBITDA</td><td class="right" id="t3-ebitda">2,858</td><td class="right">2,606</td><td class="right">2,227</td><td class="right pos" id="t3-ebitda-yoy">+28.3%</td><td class="right pos">+9.7%</td></tr>
+          <tr><td style="color:var(--text-muted);font-size:12px">EBITDA Margin %</td><td class="right" style="color:var(--green)" id="t3-em">23.6%</td><td class="right" style="color:var(--green)">23.5%</td><td class="right">22.2%</td><td class="right pos">+141bps</td><td class="right pos">+13bps</td></tr>
+          <tr><td>Depreciation</td><td class="right" id="t3-dep">626</td><td class="right">610</td><td class="right">251</td><td class="right">—</td><td class="right">—</td></tr>
+          <tr><td>Finance Costs</td><td class="right" id="t3-fin">23</td><td class="right">24</td><td class="right">9</td><td class="right">—</td><td class="right">—</td></tr>
+          <tr class="total-row"><td>PBT</td><td class="right" id="t3-pbt">2,208</td><td class="right">1,972</td><td class="right">1,967</td><td class="right pos" id="t3-pbt-yoy">+12.3%</td><td class="right pos">+12.0%</td></tr>
+          <tr><td style="color:var(--text-muted);font-size:12px">PBT Margin %</td><td class="right" style="color:var(--green)" id="t3-pbm">18.2%</td><td class="right">17.8%</td><td class="right">19.7%</td><td class="right neg">−136bps</td><td class="right pos">+48bps</td></tr>
+          <tr><td>Tax Expense</td><td class="right" id="t3-tax">559</td><td class="right">548</td><td class="right">446</td><td class="right">—</td><td class="right">—</td></tr>
+          <tr class="total-row"><td>PAT</td><td class="right" id="t3-pat">1,649</td><td class="right">1,423</td><td class="right">1,521</td><td class="right pos" id="t3-pat-yoy">+8.4%</td><td class="right pos">+15.9%</td></tr>
+          <tr><td style="color:var(--text-muted);font-size:12px">PAT Margin %</td><td class="right" style="color:var(--green)" id="t3-pm">13.6%</td><td class="right">12.8%</td><td class="right">15.2%</td><td class="right neg">−154bps</td><td class="right pos">+80bps</td></tr>
+          <tr><td>Cash PAT</td><td class="right" id="t3-cashpat">2,275</td><td class="right">2,033</td><td class="right">1,772</td><td class="right pos">+28.4%</td><td class="right pos">+11.9%</td></tr>
+          <tr><td style="color:var(--text-muted);font-size:12px">Material Margin %</td><td class="right" id="t3-matm">44.3%</td><td class="right">43.8%</td><td class="right">39.9%</td><td class="right pos">+448bps</td><td class="right pos">+50bps</td></tr>
+          <tr><td style="color:var(--text-muted);font-size:12px">Employee Cost %</td><td class="right" id="t3-empc">9.4%</td><td class="right">9.7%</td><td class="right">9.2%</td><td class="right">—</td><td class="right">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Q2 -->
+  <div id="fin-q2q" style="display:none">
+    <div class="grid-4" style="margin-bottom:18px">
+      <div class="card"><div class="card-title">Revenue</div><div class="card-value sm" id="f2-rev">11,087</div><div class="card-sub">₹ Lakhs Q2FY26</div><div style="margin-top:6px"><span class="badge up" id="f2-rev-yoy">+16.7% YoY</span></div></div>
+      <div class="card"><div class="card-title">EBITDA</div><div class="card-value sm" id="f2-ebitda">2,606</div><div class="card-sub">Margin <span id="f2-em" style="color:var(--green)">23.5%</span></div><div style="margin-top:6px"><span class="badge up">+136bps YoY</span></div></div>
+      <div class="card"><div class="card-title">PBT</div><div class="card-value sm" id="f2-pbt">1,972</div><div class="card-sub">Margin <span id="f2-pbm">17.8%</span></div><div style="margin-top:6px"><span class="badge up" id="f2-pbt-yoy">+5.6% YoY</span></div></div>
+      <div class="card"><div class="card-title">PAT</div><div class="card-value sm" id="f2-pat">1,423</div><div class="card-sub">Margin <span id="f2-pm">12.8%</span></div><div style="margin-top:6px"><span class="badge up" id="f2-pat-yoy">+4.2% YoY</span></div></div>
+    </div>
+    <div class="card tbl-wrap">
+      <table class="qtr-compare-table">
+        <thead><tr><th style="width:35%">Particulars (₹ Lakhs)</th><th class="right">Q2 FY26</th><th class="right">Q1 FY26</th><th class="right">Q2 FY25</th><th class="right">YoY</th><th class="right">QoQ</th></tr></thead>
+        <tbody>
+          <tr><td>Revenue from Operations</td><td class="right q3-col" id="t2-rev">11,087</td><td class="right" id="t2-rev-q1">8,433</td><td class="right" id="t2-rev-py">9,499</td><td class="right pos" id="t2-rev-yoy">+16.7%</td><td class="right pos">+31.5%</td></tr>
+          <tr class="total-row"><td>EBITDA</td><td class="right" id="t2-ebitda">2,606</td><td class="right">1,581</td><td class="right">2,118</td><td class="right pos">+23.1%</td><td class="right pos">+64.8%</td></tr>
+          <tr><td style="color:var(--text-muted);font-size:12px">EBITDA Margin %</td><td class="right" style="color:var(--green)" id="t2-em">23.5%</td><td class="right">18.7%</td><td class="right">22.3%</td><td class="right pos">+136bps</td><td class="right pos">+479bps</td></tr>
+          <tr class="total-row"><td>PBT</td><td class="right" id="t2-pbt">1,972</td><td class="right">971</td><td class="right">1,867</td><td class="right pos" id="t2-pbt-yoy">+5.6%</td><td class="right pos">+103%</td></tr>
+          <tr><td style="color:var(--text-muted);font-size:12px">PBT Margin %</td><td class="right" id="t2-pbm">17.8%</td><td class="right">11.5%</td><td class="right">19.7%</td><td class="right neg">−173bps</td><td class="right pos">+629bps</td></tr>
+          <tr class="total-row"><td>PAT</td><td class="right" id="t2-pat">1,423</td><td class="right">717</td><td class="right">1,366</td><td class="right pos" id="t2-pat-yoy">+4.2%</td><td class="right pos">+98.6%</td></tr>
+          <tr><td style="color:var(--text-muted);font-size:12px">PAT Margin %</td><td class="right" id="t2-pm">12.8%</td><td class="right">8.5%</td><td class="right">14.4%</td><td class="right neg">−144bps</td><td class="right pos">+435bps</td></tr>
+          <tr><td>Cash PAT</td><td class="right" id="t2-cashpat">2,033</td><td class="right">1,309</td><td class="right">1,609</td><td class="right pos">+26.4%</td><td class="right pos">+55.3%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Q1 -->
+  <div id="fin-q1q" style="display:none">
+    <div class="grid-4" style="margin-bottom:18px">
+      <div class="card"><div class="card-title">Revenue</div><div class="card-value sm" id="f1-rev">8,433</div><div class="card-sub">₹ Lakhs Q1FY26</div><div style="margin-top:6px"><span class="badge down" id="f1-rev-yoy">−6.7% YoY</span></div></div>
+      <div class="card"><div class="card-title">EBITDA</div><div class="card-value sm" id="f1-ebitda">1,581</div><div class="card-sub">Margin <span id="f1-em" style="color:var(--gold)">18.7%</span></div><div style="margin-top:6px"><span class="badge down">−240bps YoY</span></div></div>
+      <div class="card"><div class="card-title">PBT</div><div class="card-value sm" id="f1-pbt">971</div><div class="card-sub">Margin <span id="f1-pbm" style="color:var(--red)">11.5%</span></div><div style="margin-top:6px"><span class="badge down" id="f1-pbt-yoy">−41.9% YoY</span></div></div>
+      <div class="card"><div class="card-title">PAT</div><div class="card-value sm" id="f1-pat">717</div><div class="card-sub">Margin <span id="f1-pm" style="color:var(--red)">8.5%</span></div><div style="margin-top:6px"><span class="badge down" id="f1-pat-yoy">−42.2% YoY</span></div></div>
+    </div>
+    <div class="hl-box">
+      <div class="hl-box-title">Why Q1 FY26 Was Weak</div>
+      <div class="hl-box-text">Q1 saw SS hose revenue decline 25.6% YoY due to seasonal softness and order timing. Depreciation jumped sharply as FY25 capex of ₹86 Cr was fully commissioned. Revenue and margins recovered strongly in Q2 and Q3 as new capacity ramped up.</div>
+    </div>
+    <div class="card tbl-wrap">
+      <table class="qtr-compare-table">
+        <thead><tr><th style="width:35%">Particulars (₹ Lakhs)</th><th class="right">Q1 FY26</th><th class="right">Q4 FY25</th><th class="right">Q1 FY25</th><th class="right">YoY</th></tr></thead>
+        <tbody>
+          <tr><td>Revenue from Operations</td><td class="right q3-col" id="t1-rev">8,433</td><td class="right">9,076</td><td class="right" id="t1-rev-py">9,078</td><td class="right neg" id="t1-rev-yoy">−6.7%</td></tr>
+          <tr class="total-row"><td>EBITDA</td><td class="right" id="t1-ebitda">1,581</td><td class="right">1,913</td><td class="right">1,912</td><td class="right neg">−17.3%</td></tr>
+          <tr><td style="color:var(--text-muted);font-size:12px">EBITDA Margin %</td><td class="right" style="color:var(--gold)" id="t1-em">18.7%</td><td class="right">21.1%</td><td class="right">21.1%</td><td class="right neg">−240bps</td></tr>
+          <tr class="total-row"><td>PAT</td><td class="right" id="t1-pat">717</td><td class="right">1,124</td><td class="right">1,241</td><td class="right neg" id="t1-pat-yoy">−42.2%</td></tr>
+          <tr><td style="color:var(--text-muted);font-size:12px">PAT Margin %</td><td class="right" style="color:var(--red)" id="t1-pm">8.5%</td><td class="right">12.4%</td><td class="right">13.7%</td><td class="right neg">−520bps</td></tr>
+          <tr><td>Cash PAT</td><td class="right" id="t1-cashpat">1,309</td><td class="right">1,478</td><td class="right">1,479</td><td class="right neg">−11.4%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 9M -->
+  <div id="fin-9mq" style="display:none">
+    <div class="grid-4" style="margin-bottom:18px">
+      <div class="card"><div class="card-title">Revenue (9M)</div><div class="card-value sm" id="f9-rev">31,610</div><div class="card-sub">₹ Lakhs</div><div style="margin-top:6px"><span class="badge up">+11.1% YoY</span></div></div>
+      <div class="card"><div class="card-title">EBITDA (9M)</div><div class="card-value sm" id="f9-ebitda">7,045</div><div class="card-sub">Margin <span style="color:var(--green)">22.2%</span></div><div style="margin-top:6px"><span class="badge up">+43bps YoY</span></div></div>
+      <div class="card"><div class="card-title">PBT (9M)</div><div class="card-value sm" id="f9-pbt">5,151</div><div class="card-sub">Margin 16.3%</div><div style="margin-top:6px"><span class="badge down">−6.4% YoY</span></div></div>
+      <div class="card"><div class="card-title">PAT (9M)</div><div class="card-value sm" id="f9-pat">3,789</div><div class="card-sub">Margin 12.0%</div><div style="margin-top:6px"><span class="badge down">−8.2% YoY</span></div></div>
+    </div>
+    <div class="card tbl-wrap">
+      <table class="qtr-compare-table">
+        <thead><tr><th style="width:35%">Particulars (₹ Lakhs)</th><th class="right">9M FY26</th><th class="right">9M FY25</th><th class="right">YoY</th><th class="right">FY25 (Full Year)</th></tr></thead>
+        <tbody>
+          <tr><td>Revenue from Operations</td><td class="right q3-col" id="t9-rev">31,610</td><td class="right">28,454</td><td class="right pos">+11.1%</td><td class="right">37,623</td></tr>
+          <tr class="total-row"><td>EBITDA</td><td class="right" id="t9-ebitda">7,045</td><td class="right">6,257</td><td class="right pos">+12.6%</td><td class="right">~8,158</td></tr>
+          <tr><td style="color:var(--text-muted);font-size:12px">EBITDA Margin %</td><td class="right" style="color:var(--green)" id="t9-em">22.2%</td><td class="right">22.0%</td><td class="right pos">+43bps</td><td class="right">21.7%</td></tr>
+          <tr><td>D&A + Finance Costs</td><td class="right">1,894</td><td class="right">754</td><td class="right neg">+151%</td><td class="right">1,163</td></tr>
+          <tr class="total-row"><td>PBT</td><td class="right" id="t9-pbt">5,151</td><td class="right">5,502</td><td class="right neg">−6.4%</td><td class="right">6,995</td></tr>
+          <tr><td style="color:var(--text-muted);font-size:12px">PBT Margin %</td><td class="right" style="color:var(--red)" id="t9-pbm">16.3%</td><td class="right">19.3%</td><td class="right neg">−292bps</td><td class="right">18.6%</td></tr>
+          <tr class="total-row"><td>PAT</td><td class="right" id="t9-pat">3,789</td><td class="right">4,128</td><td class="right neg">−8.2%</td><td class="right">5,251</td></tr>
+          <tr><td style="color:var(--text-muted);font-size:12px">PAT Margin %</td><td class="right" style="color:var(--red)" id="t9-pm">12.0%</td><td class="right">14.5%</td><td class="right neg">−242bps</td><td class="right">13.9%</td></tr>
+          <tr><td>Cash PAT</td><td class="right" id="t9-cashpat">5,618</td><td class="right">4,859</td><td class="right pos">+15.6%</td><td class="right">—</td></tr>
+          <tr><td style="color:var(--text-muted);font-size:12px">Material Margin %</td><td class="right">43.4%</td><td class="right">40.2%</td><td class="right pos">+315bps</td><td class="right">40.5%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="hl-box" style="margin-top:14px">
+      <div class="hl-box-title">Why PAT declined despite Revenue growth in 9M?</div>
+      <div class="hl-box-text">Depreciation surged from ₹732L → ₹1,829L (+150%) as FY25's ₹86 Cr capex hit the P&L. Revenue (+11.1%), EBITDA (+12.6%) and material margins (+315bps) are all improving. This is a temporary D&A headwind — not a business deterioration.</div>
+    </div>
+  </div>
+
+  <!-- H1 -->
+  <div id="fin-h1q" style="display:none">
+    <div class="grid-4" style="margin-bottom:18px">
+      <div class="card"><div class="card-title">Revenue (H1)</div><div class="card-value sm" id="fh-rev">19,521</div><div class="card-sub">₹ Lakhs</div><div style="margin-top:6px"><span class="badge up">+5.7% YoY</span></div></div>
+      <div class="card"><div class="card-title">EBITDA (H1)</div><div class="card-value sm" id="fh-ebitda">4,187</div><div class="card-sub">Margin <span style="color:var(--text-muted)">21.4%</span></div><div style="margin-top:6px"><span class="badge down">−21bps YoY</span></div></div>
+      <div class="card"><div class="card-title">PBT (H1)</div><div class="card-value sm" id="fh-pbt">2,942</div><div class="card-sub">Margin 15.1%</div><div style="margin-top:6px"><span class="badge down">−16.8% YoY</span></div></div>
+      <div class="card"><div class="card-title">PAT (H1)</div><div class="card-value sm" id="fh-pat">2,140</div><div class="card-sub">Margin 11.0%</div><div style="margin-top:6px"><span class="badge down">−17.9% YoY</span></div></div>
+    </div>
+    <div class="card tbl-wrap">
+      <table class="qtr-compare-table">
+        <thead><tr><th style="width:35%">Particulars (₹ Lakhs)</th><th class="right">H1 FY26</th><th class="right">H1 FY25</th><th class="right">YoY</th></tr></thead>
+        <tbody>
+          <tr><td>Revenue from Operations</td><td class="right q3-col" id="th-rev">19,521</td><td class="right">18,474</td><td class="right pos">+5.7%</td></tr>
+          <tr class="total-row"><td>EBITDA</td><td class="right" id="th-ebitda">4,187</td><td class="right">4,030</td><td class="right pos">+3.9%</td></tr>
+          <tr><td style="color:var(--text-muted);font-size:12px">EBITDA Margin %</td><td class="right" id="th-em">21.4%</td><td class="right">21.8%</td><td class="right neg">−21bps</td></tr>
+          <tr class="total-row"><td>PBT</td><td class="right" id="th-pbt">2,942</td><td class="right">3,536</td><td class="right neg">−16.8%</td></tr>
+          <tr class="total-row"><td>PAT</td><td class="right" id="th-pat">2,140</td><td class="right">2,607</td><td class="right neg">−17.9%</td></tr>
+          <tr><td>Cash PAT</td><td class="right" id="th-cashpat">3,343</td><td class="right">3,087</td><td class="right pos">+8.3%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── SALES TAB ── -->
+<div class="tab-content" id="tab-sales">
+  <div class="kicker">Product Mix — All Quarters</div>
+  <h2 class="section-title">Sales Analysis</h2>
+  <p class="section-sub">Revenue split by product, export/domestic, industry · Use quarter selector above</p>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Product Revenue — All Quarters (₹ Cr)</div>
+      <div class="chart-wrap"><canvas id="prodAllQtrChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Export vs Domestic — All Quarters (%)</div>
+      <div class="chart-wrap"><canvas id="expDomAllChart"></canvas></div>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Industry Mix — Q3 FY26 (%)</div>
+      <div class="chart-wrap"><canvas id="industryChart"></canvas></div>
+    </div>
+    <div class="card tbl-wrap">
+      <div class="card-title">Industry Mix — All Quarters</div>
+      <table class="qtr-compare-table">
+        <thead><tr><th>Industry</th><th class="right">Q3FY26</th><th class="right">Q2FY26</th><th class="right">Q1FY26</th><th class="right">9MFY26</th><th class="right">Q3FY25</th></tr></thead>
+        <tbody>
+          <tr><td>Ports &amp; Terminals</td><td class="right q3-col" id="ind-ports-q3">25.8%</td><td class="right">23.3%</td><td class="right">26.4%</td><td class="right">25.1%</td><td class="right">24.5%</td></tr>
+          <tr><td>Steel &amp; Metals</td><td class="right q3-col" id="ind-steel-q3">22.9%</td><td class="right">20.2%</td><td class="right">25.7%</td><td class="right">22.7%</td><td class="right">24.0%</td></tr>
+          <tr><td>New Age</td><td class="right q3-col" id="ind-newage-q3">16.7%</td><td class="right">20.3%</td><td class="right">12.8%</td><td class="right">16.9%</td><td class="right">19.3%</td></tr>
+          <tr><td>Oil &amp; Gas</td><td class="right q3-col" id="ind-ong-q3">12.6%</td><td class="right">10.8%</td><td class="right">9.9%</td><td class="right">11.2%</td><td class="right">8.7%</td></tr>
+          <tr><td>Petrochemicals</td><td class="right q3-col" id="ind-petro-q3">9.1%</td><td class="right">8.8%</td><td class="right">13.5%</td><td class="right">10.2%</td><td class="right">7.8%</td></tr>
+          <tr><td>Others</td><td class="right q3-col" id="ind-others-q3">13.0%</td><td class="right">16.8%</td><td class="right">11.7%</td><td class="right">13.9%</td><td class="right">15.6%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── GEOGRAPHY TAB ── -->
+<div class="tab-content" id="tab-geography">
+  <div class="kicker">Export &amp; Domestic Geography</div>
+  <h2 class="section-title">Geography Analysis</h2>
+  <p class="section-sub">Export region mix across all quarters FY26</p>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Export by Region — All Quarters FY26 (%)</div>
+      <div class="chart-wrap"><canvas id="geoAllQtrChart"></canvas></div>
+    </div>
+    <div class="card tbl-wrap">
+      <div class="card-title">Export Geography — All Quarters</div>
+      <table class="qtr-compare-table">
+        <thead><tr><th>Region</th><th class="right">Q3FY26</th><th class="right">Q2FY26</th><th class="right">Q1FY26</th><th class="right">9MFY26</th><th class="right">Q3FY25</th></tr></thead>
+        <tbody>
+          <tr><td>Americas (N+S)</td><td class="right q3-col" id="geo-ams-q3">58.4%</td><td class="right">59.8%</td><td class="right">59.4%</td><td class="right">59.2%</td><td class="right">62.3%</td></tr>
+          <tr><td>Europe</td><td class="right q3-col" id="geo-eur-q3">29.8%</td><td class="right">24.5%</td><td class="right">22.5%</td><td class="right">26.0%</td><td class="right">28.4%</td></tr>
+          <tr><td>Asia</td><td class="right q3-col" id="geo-asia-q3">10.2%</td><td class="right">13.5%</td><td class="right">11.7%</td><td class="right">11.7%</td><td class="right">5.7%</td></tr>
+          <tr><td>Africa</td><td class="right q3-col" id="geo-afr-q3">0.8%</td><td class="right">1.4%</td><td class="right">5.3%</td><td class="right">2.2%</td><td class="right">2.9%</td></tr>
+          <tr><td>Others</td><td class="right">0.9%</td><td class="right">0.8%</td><td class="right">1.1%</td><td class="right">0.9%</td><td class="right">0.8%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card tbl-wrap">
+      <div class="card-title">Top Countries — Q3 FY26 Export</div>
+      <table class="qtr-compare-table">
+        <thead><tr><th>Country</th><th class="right">₹ Cr</th><th class="right">Mix %</th><th class="right">YoY</th></tr></thead>
+        <tbody>
+          <tr><td>🇺🇸 USA</td><td class="right">42.9</td><td class="right">49.4%</td><td class="right pos">+15.7%</td></tr>
+          <tr><td>🇧🇪 Belgium</td><td class="right">4.4</td><td class="right">5.1%</td><td class="right pos">+81.9%</td></tr>
+          <tr><td>🇮🇹 Italy</td><td class="right">4.1</td><td class="right">4.8%</td><td class="right pos">+105.8%</td></tr>
+          <tr><td>🇦🇪 UAE</td><td class="right">3.8</td><td class="right">4.4%</td><td class="right pos">+598%</td></tr>
+          <tr><td>🇫🇷 France</td><td class="right">3.0</td><td class="right">3.5%</td><td class="right neg">−7.2%</td></tr>
+          <tr><td>🇧🇷 Brazil</td><td class="right">2.9</td><td class="right">3.3%</td><td class="right pos">+234%</td></tr>
+          <tr><td>🇬🇧 UK</td><td class="right">2.6</td><td class="right">3.0%</td><td class="right pos">+36.7%</td></tr>
+          <tr><td>🇵🇱 Poland</td><td class="right">1.8</td><td class="right">2.1%</td><td class="right pos">+35.9%</td></tr>
+          <tr><td>Others (37 countries)</td><td class="right">12.7</td><td class="right">14.6%</td><td class="right pos">+51.7%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card tbl-wrap">
+      <div class="card-title">Domestic by Zone — Q3 FY26 (₹ Cr)</div>
+      <table class="qtr-compare-table">
+        <thead><tr><th>Zone</th><th class="right">Q3FY26</th><th class="right">Q3FY25</th><th class="right">YoY</th></tr></thead>
+        <tbody>
+          <tr><td>West</td><td class="right">16.4</td><td class="right">20.4</td><td class="right neg">−19.9%</td></tr>
+          <tr><td>North</td><td class="right">7.5</td><td class="right">2.4</td><td class="right pos">+213.3%</td></tr>
+          <tr><td>East</td><td class="right">4.5</td><td class="right">6.5</td><td class="right neg">−29.9%</td></tr>
+          <tr><td>South</td><td class="right">2.5</td><td class="right">1.7</td><td class="right pos">+45.3%</td></tr>
+          <tr class="total-row"><td>Total Domestic</td><td class="right">30.9</td><td class="right">31.0</td><td class="right neg">−0.3%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── OPERATIONS TAB ── -->
+<div class="tab-content" id="tab-operations">
+  <div class="kicker">Capacity &amp; Production</div>
+  <h2 class="section-title">Operations</h2>
+  <p class="section-sub">Capacity utilisation across all quarters FY26</p>
+  <div class="grid-3">
+    <div class="card"><div class="card-title">Braiding Util — Q3</div><div class="card-value" id="op-braid-util">76.3%</div><div class="card-sub">Annual Cap: 165L Mtrs | Q3: 31.5L</div><div style="margin-top:12px"><div style="height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden"><div style="width:76.3%;height:100%;background:var(--blue);border-radius:4px"></div></div></div></div>
+    <div class="card"><div class="card-title">Assembly Util — Q3</div><div class="card-value" id="op-asm-util">92.2%</div><div class="card-sub">Annual Cap: 750K nos | Q3: 1,72,845</div><div style="margin-top:12px"><div style="height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden"><div style="width:92.2%;height:100%;background:var(--green);border-radius:4px"></div></div></div></div>
+    <div class="card"><div class="card-title">Hyd-Air Util — Q3</div><div class="card-value" id="op-hydair-util">84.3%</div><div class="card-sub">Annual Cap: 876K nos | Q3: 1,84,633</div><div style="margin-top:12px"><div style="height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden"><div style="width:84.3%;height:100%;background:var(--gold);border-radius:4px"></div></div></div></div>
+  </div>
+  <div class="card tbl-wrap" style="margin-bottom:20px">
+    <div class="card-title" style="margin-bottom:14px">Capacity Utilisation — All Quarters FY26</div>
+    <table class="qtr-compare-table">
+      <thead><tr><th>Product</th><th>Unit</th><th class="right">Annual Cap.</th><th class="right q3-highlight">Q3 FY26</th><th class="right">Q3 Util</th><th class="right" style="border-left:1px solid #e2e8f0">Q2 FY26</th><th class="right">Q2 Util</th><th class="right" style="border-left:1px solid #e2e8f0">Q1 FY26</th><th class="right">Q1 Util</th><th class="right" style="border-left:1px solid #e2e8f0">9M FY26</th><th class="right">9M Util</th></tr></thead>
+      <tbody>
+        <tr><td>Braiding</td><td>Meter</td><td class="right">1.65 Cr</td><td class="right q3-col q3-highlight">31,47,724</td><td class="right pos">76.3%</td><td class="right" style="border-left:1px solid #e2e8f0">31,75,207</td><td class="right pos">76.9%</td><td class="right" style="border-left:1px solid #e2e8f0">24,88,007</td><td class="right">60.3%</td><td class="right" style="border-left:1px solid #e2e8f0">88,10,938</td><td class="right pos">71.2%</td></tr>
+        <tr><td>Interlock</td><td>Meter</td><td class="right">90,000</td><td class="right q3-col q3-highlight">38,547</td><td class="right" style="color:var(--gold)">171%*</td><td class="right" style="border-left:1px solid #e2e8f0">27,482</td><td class="right" style="color:var(--gold)">122%*</td><td class="right" style="border-left:1px solid #e2e8f0">9,364</td><td class="right">41.6%</td><td class="right" style="border-left:1px solid #e2e8f0">75,393</td><td class="right" style="color:var(--gold)">112%*</td></tr>
+        <tr><td>Composite</td><td>Meter</td><td class="right">60,000</td><td class="right q3-col q3-highlight">4,287</td><td class="right neg">28.6%</td><td class="right" style="border-left:1px solid #e2e8f0">9,431</td><td class="right">62.9%</td><td class="right" style="border-left:1px solid #e2e8f0">11,223</td><td class="right pos">74.8%</td><td class="right" style="border-left:1px solid #e2e8f0">24,941</td><td class="right">55.4%</td></tr>
+        <tr><td>Assembly</td><td>Nos.</td><td class="right">7.5L</td><td class="right q3-col q3-highlight">1,72,845</td><td class="right pos">92.2%</td><td class="right" style="border-left:1px solid #e2e8f0">1,83,408</td><td class="right pos">97.8%</td><td class="right" style="border-left:1px solid #e2e8f0">1,72,204</td><td class="right pos">137.8%</td><td class="right" style="border-left:1px solid #e2e8f0">5,28,457</td><td class="right pos">93.9%</td></tr>
+        <tr><td>Bellows</td><td>Nos.</td><td class="right">1.2L</td><td class="right q3-col q3-highlight">1,797</td><td class="right neg">6.0%</td><td class="right" style="border-left:1px solid #e2e8f0">847</td><td class="right neg">2.8%</td><td class="right" style="border-left:1px solid #e2e8f0">928</td><td class="right neg">3.1%</td><td class="right" style="border-left:1px solid #e2e8f0">3,572</td><td class="right neg">4.0%</td></tr>
+        <tr><td>Hyd-Air</td><td>Nos.</td><td class="right">8.76L</td><td class="right q3-col q3-highlight">1,84,633</td><td class="right pos">84.3%</td><td class="right" style="border-left:1px solid #e2e8f0">1,88,661</td><td class="right pos">86.1%</td><td class="right" style="border-left:1px solid #e2e8f0">1,48,206</td><td class="right pos">67.7%</td><td class="right" style="border-left:1px solid #e2e8f0">5,21,500</td><td class="right pos">79.4%</td></tr>
+      </tbody>
+    </table>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:8px">* Annualised utilisation — may exceed 100% due to running extra shifts</div>
+  </div>
+  <div class="grid-3">
+    <div class="card"><div class="card-title">Employee Strength — All Quarters</div>
+      <div class="stat-row"><span class="stat-label">On-Roll (Q3)</span><span class="stat-val" id="emp-q3">591</span></div>
+      <div class="stat-row"><span class="stat-label">On-Roll (Q2)</span><span class="stat-val" id="emp-q2">551</span></div>
+      <div class="stat-row"><span class="stat-label">On-Roll (Q1)</span><span class="stat-val" id="emp-q1">555</span></div>
+      <div class="stat-row"><span class="stat-label">New in Q3</span><span class="stat-val" style="color:var(--green)">64</span></div>
+      <div class="stat-row"><span class="stat-label">New in Q2</span><span class="stat-val" style="color:var(--green)">25</span></div>
+      <div class="stat-row"><span class="stat-label">New in Q1</span><span class="stat-val" style="color:var(--green)">29</span></div>
+    </div>
+    <div class="card"><div class="card-title">Domestic Reach — All Quarters</div>
+      <table class="qtr-compare-table" style="font-size:12px">
+        <thead><tr><th>Metric</th><th class="right">Q3</th><th class="right">Q2</th><th class="right">Q1</th></tr></thead>
+        <tbody>
+          <tr><td>States</td><td class="right">19</td><td class="right">22</td><td class="right">22</td></tr>
+          <tr><td>Cities</td><td class="right">102</td><td class="right">103</td><td class="right">145</td></tr>
+          <tr><td>Customers</td><td class="right">351</td><td class="right">359</td><td class="right">342</td></tr>
+          <tr><td>New Customers</td><td class="right pos">46</td><td class="right pos">49</td><td class="right pos">50</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card"><div class="card-title">Export Reach — All Quarters</div>
+      <table class="qtr-compare-table" style="font-size:12px">
+        <thead><tr><th>Metric</th><th class="right">Q3</th><th class="right">Q2</th><th class="right">Q1</th></tr></thead>
+        <tbody>
+          <tr><td>Countries</td><td class="right">45</td><td class="right">50</td><td class="right">46</td></tr>
+          <tr><td>Customers</td><td class="right">146</td><td class="right">138</td><td class="right">128</td></tr>
+          <tr><td>New Customers</td><td class="right pos">18</td><td class="right pos">20</td><td class="right pos">15</td></tr>
+          <tr><td>Major OEM wins</td><td class="right" style="color:var(--blue);font-size:11px">Victaulic, Honeywell</td><td class="right" style="font-size:11px">Rapidrop</td><td class="right" style="font-size:11px">Atlas Copco</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── CAPEX TAB ── -->
+<div class="tab-content" id="tab-capex">
+  <div class="kicker">Capital Expenditure</div>
+  <h2 class="section-title">Capex Tracker</h2>
+  <p class="section-sub">Budget vs execution by quarter · INR Crores</p>
+  <div class="grid-4">
+    <div class="card"><div class="card-title">Total Announced</div><div class="card-value">₹97.6 <span style="font-size:16px;color:var(--text-muted)">Cr</span></div><div class="card-sub">18 Dec 2025</div></div>
+    <div class="card"><div class="card-title">Done in Q3</div><div class="card-value">₹16.4 <span style="font-size:16px;color:var(--text-muted)">Cr</span></div></div>
+    <div class="card"><div class="card-title">Done in Q2</div><div class="card-value">₹9.9 <span style="font-size:16px;color:var(--text-muted)">Cr</span></div></div>
+    <div class="card"><div class="card-title">Total Done (9M)</div><div class="card-value">₹45.1 <span style="font-size:16px;color:var(--text-muted)">Cr</span></div><span class="badge flat" style="margin-top:8px;display:inline-flex">46.2% executed</span></div>
+  </div>
+  <div class="card tbl-wrap" style="margin-bottom:18px">
+    <div class="card-title" style="margin-bottom:14px">Capex by Division — Quarter Breakdown (₹ Cr)</div>
+    <table class="qtr-compare-table">
+      <thead><tr><th>Division</th><th class="right">Budget</th><th class="right">Done upto FY25</th><th class="right q3-highlight">Q3 FY26</th><th class="right">Q2 FY26</th><th class="right">Q1 FY26</th><th class="right">Total Done</th><th class="right">Remaining</th><th class="right">% Done</th></tr></thead>
+      <tbody>
+        <tr><td>Hose Division</td><td class="right">54.0</td><td class="right">6.57</td><td class="right q3-col q3-highlight">8.87</td><td class="right">6.40</td><td class="right">6.77</td><td class="right">28.61</td><td class="right">25.39</td><td class="right pos">53%</td></tr>
+        <tr><td>Metal Bellows</td><td class="right">10.5</td><td class="right">2.31</td><td class="right q3-col q3-highlight">1.14</td><td class="right">2.03</td><td class="right">1.74</td><td class="right">7.22</td><td class="right">3.28</td><td class="right pos">68.8%</td></tr>
+        <tr><td>Liquid Cooling (Vertiv)</td><td class="right">48.0</td><td class="right">—</td><td class="right q3-col q3-highlight">6.30</td><td class="right">1.50</td><td class="right">1.30</td><td class="right">9.10</td><td class="right">38.90</td><td class="right neg">19%</td></tr>
+        <tr><td>New Shed</td><td class="right">—</td><td class="right">—</td><td class="right q3-col q3-highlight">0.13</td><td class="right">—</td><td class="right">—</td><td class="right">0.13</td><td class="right">—</td><td class="right">—</td></tr>
+        <tr class="total-row"><td>Aeroflex Total</td><td class="right">128.5</td><td class="right">8.88</td><td class="right q3-highlight">16.44</td><td class="right">9.93</td><td class="right">9.81</td><td class="right">45.06</td><td class="right">83.44</td><td class="right pos">35%</td></tr>
+        <tr><td>Hyd Air</td><td class="right">18.0</td><td class="right">14.65</td><td class="right q3-col q3-highlight">4.69</td><td class="right">0.78</td><td class="right">0.48</td><td class="right">20.60</td><td class="right neg">−2.60</td><td class="right neg">114%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">Capex Execution — Budget vs Done (₹ Cr)</div><div class="chart-wrap"><canvas id="capexChart"></canvas></div></div>
+    <div class="card">
+      <div class="card-title">Expansion Plan Summary</div>
+      <div class="stat-row"><span class="stat-label">SS Hose Capacity (Current)</span><span class="stat-val">17.5 Mn Mtrs</span></div>
+      <div class="stat-row"><span class="stat-label">Target (Q2 FY27)</span><span class="stat-val" style="color:var(--green)">20 Mn Mtrs</span></div>
+      <div class="stat-row"><span class="stat-label">Assembly Stations (Current)</span><span class="stat-val">46</span></div>
+      <div class="stat-row"><span class="stat-label">Target Stations</span><span class="stat-val" style="color:var(--green)">70</span></div>
+      <div class="stat-row"><span class="stat-label">Liquid Cooling (Current)</span><span class="stat-val">2,000 pcs/yr</span></div>
+      <div class="stat-row"><span class="stat-label">Target (Jun 2026)</span><span class="stat-val" style="color:var(--green)">15,000 pcs/yr</span></div>
+      <div class="stat-row"><span class="stat-label">Bellows Capacity</span><span class="stat-val">1,20,000 pcs/yr</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── RATIOS TAB ── -->
+<div class="tab-content" id="tab-ratios">
+  <div class="kicker">Working Capital — All Quarters</div>
+  <h2 class="section-title">Key Ratios</h2>
+  <p class="section-sub">Working capital days across Q1, Q2, Q3 FY26 vs prior year</p>
+  <div class="card tbl-wrap" style="margin-bottom:20px">
+    <div class="card-title" style="margin-bottom:14px">Working Capital Days — All Quarters</div>
+    <table class="qtr-compare-table">
+      <thead><tr>
+        <th>Metric (Days)</th>
+        <th class="right q3-highlight">Q3FY26</th><th class="right">Q3FY25</th><th class="right">Δ</th>
+        <th class="right" style="border-left:1px solid #e2e8f0">Q2FY26</th><th class="right">Q2FY25</th><th class="right">Δ</th>
+        <th class="right" style="border-left:1px solid #e2e8f0">Q1FY26</th><th class="right">Q1FY25</th><th class="right">Δ</th>
+        <th class="right" style="border-left:1px solid #e2e8f0">9MFY26</th><th class="right">9MFY25</th><th class="right">Δ</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td>Receivable Days</td>
+          <td class="right pos q3-highlight" id="rt-rec-q3">99.9</td><td class="right">114.6</td><td class="right pos" id="rt-rec-q3-d">−14.8</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="rt-rec-q2">97.1</td><td class="right">107.5</td><td class="right pos" id="rt-rec-q2-d">−10.4</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="rt-rec-q1">124.0</td><td class="right">102.3</td><td class="right neg" id="rt-rec-q1-d">+21.6</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="rt-rec-9m">111.6</td><td class="right">110.4</td><td class="right neg" id="rt-rec-9m-d">+1.2</td>
+        </tr>
+        <tr>
+          <td>Inventory Days</td>
+          <td class="right pos q3-highlight" id="rt-inv-q3">100.7</td><td class="right">102.1</td><td class="right pos" id="rt-inv-q3-d">−1.5</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="rt-inv-q2">99.4</td><td class="right">101.9</td><td class="right pos" id="rt-inv-q2-d">−2.6</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="rt-inv-q1">120.1</td><td class="right">98.5</td><td class="right neg" id="rt-inv-q1-d">+21.6</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="rt-inv-9m">109.3</td><td class="right">103.6</td><td class="right neg" id="rt-inv-9m-d">+5.7</td>
+        </tr>
+        <tr>
+          <td>Payable Days</td>
+          <td class="right q3-highlight" id="rt-pay-q3">106.0</td><td class="right">112.4</td><td class="right pos" id="rt-pay-q3-d">−6.3</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="rt-pay-q2">96.8</td><td class="right">101.4</td><td class="right pos" id="rt-pay-q2-d">−4.7</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="rt-pay-q1">105.2</td><td class="right">92.9</td><td class="right neg" id="rt-pay-q1-d">+12.2</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="rt-pay-9m">105.7</td><td class="right">109.8</td><td class="right pos" id="rt-pay-9m-d">−4.1</td>
+        </tr>
+        <tr class="total-row">
+          <td>Net WC Days</td>
+          <td class="right pos q3-highlight" id="rt-nwc-q3">112.9</td><td class="right">124.2</td><td class="right pos" id="rt-nwc-q3-d">−11.2</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="rt-nwc-q2">124.5</td><td class="right">127.8</td><td class="right pos" id="rt-nwc-q2-d">−3.3</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="rt-nwc-q1">161.8</td><td class="right">125.9</td><td class="right neg" id="rt-nwc-q1-d">+35.8</td>
+          <td class="right" style="border-left:1px solid #e2e8f0" id="rt-nwc-9m">128.5</td><td class="right">111.1</td><td class="right neg" id="rt-nwc-9m-d">+17.4</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">Net Working Capital Days — Trend</div><div class="chart-wrap"><canvas id="wcChart"></canvas></div></div>
+    <div class="card">
+      <div class="card-title">Observations</div>
+      <div class="hl-box" style="margin-top:4px">
+        <div class="hl-box-title">Q1 FY26 Spike</div>
+        <div class="hl-box-text">WC days spiked to 161.8 in Q1 due to slower revenue + higher inventory buildup from new product launches. This normalised significantly by Q2 (124.5 days) and Q3 (112.9 days) — the best level in FY26.</div>
+      </div>
+      <div class="hl-box">
+        <div class="hl-box-title">Q3 FY26 Improvement</div>
+        <div class="hl-box-text">All three drivers improved YoY in Q3: receivables down 14.8 days, payables reduced 6.3 days. This is the clearest indicator of operational efficiency recovery after the weak Q1.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── HISTORICAL TAB ── -->
+<div class="tab-content" id="tab-history">
+  <div class="kicker">Multi-Year Track Record</div>
+  <h2 class="section-title">Historical Performance</h2>
+  <p class="section-sub">FY18 to 9M FY26 · Consolidated · ₹ Crores</p>
+  <div class="grid-4">
+    <div class="card"><div class="card-title">Revenue 6-yr CAGR (FY19–FY25)</div><div class="card-value">17.9%</div></div>
+    <div class="card"><div class="card-title">EBITDA 6-yr CAGR</div><div class="card-value">23.2%</div></div>
+    <div class="card"><div class="card-title">PAT 5-yr CAGR (FY20–FY25)</div><div class="card-value">62.1%</div></div>
+    <div class="card"><div class="card-title">Debt / Equity (9M FY26)</div><div class="card-value">0.003×</div><div class="card-sub">Near-zero debt</div></div>
+  </div>
+  <div class="card" style="margin-bottom:18px"><div class="card-title">Revenue &amp; EBITDA Margin — FY18 to 9M FY26</div><div class="chart-wrap tall"><canvas id="histRevChart"></canvas></div></div>
+  <div class="card tbl-wrap"><div class="card-title" style="margin-bottom:14px">Historical Financial Summary (₹ Cr)</div>
+    <table class="qtr-compare-table">
+      <thead><tr><th>Metric</th><th class="right">9MFY26</th><th class="right">FY25</th><th class="right">FY24</th><th class="right">FY23</th><th class="right">FY22</th><th class="right">FY21</th><th class="right">FY20</th><th class="right">FY19</th><th class="right">FY18</th></tr></thead>
+      <tbody>
+        <tr><td>Revenue</td><td class="right q3-col">316.1</td><td class="right">376.2</td><td class="right">317.9</td><td class="right">269.5</td><td class="right">240.8</td><td class="right">144.8</td><td class="right">144.3</td><td class="right">140.4</td><td class="right">113.6</td></tr>
+        <tr><td>EBITDA</td><td class="right q3-col">70.4</td><td class="right">81.6</td><td class="right">65.7</td><td class="right">53.0</td><td class="right">46.9</td><td class="right">22.4</td><td class="right">22.3</td><td class="right">23.3</td><td class="right">9.9</td></tr>
+        <tr><td style="color:var(--text-muted);font-size:12px">EBITDA Margin</td><td class="right" style="color:var(--green)">22.3%</td><td class="right">21.7%</td><td class="right">20.7%</td><td class="right">19.7%</td><td class="right">19.5%</td><td class="right">15.5%</td><td class="right">15.5%</td><td class="right">16.6%</td><td class="right">8.7%</td></tr>
+        <tr><td>PBT</td><td class="right q3-col">51.5</td><td class="right">69.9</td><td class="right">57.3</td><td class="right">41.2</td><td class="right">36.9</td><td class="right">8.0</td><td class="right">3.6</td><td class="right">5.0</td><td class="right">0.1</td></tr>
+        <tr><td>PAT</td><td class="right q3-col">37.9</td><td class="right">52.5</td><td class="right">41.7</td><td class="right">30.2</td><td class="right">27.5</td><td class="right">6.0</td><td class="right">4.7</td><td class="right">7.1</td><td class="right">0.1</td></tr>
+        <tr><td style="color:var(--text-muted);font-size:12px">PAT Margin</td><td class="right" style="color:var(--red)">12.0%</td><td class="right">13.9%</td><td class="right">13.1%</td><td class="right">11.2%</td><td class="right">11.4%</td><td class="right">4.2%</td><td class="right">3.2%</td><td class="right">5.0%</td><td class="right">0.1%</td></tr>
+        <tr><td style="color:var(--text-muted);font-size:12px">Debt / Equity</td><td class="right">0.003</td><td class="right">0.002</td><td class="right">0.0</td><td class="right">0.39</td><td class="right">0.45</td><td class="right">0.90</td><td class="right">1.20</td><td class="right">1.53</td><td class="right">1.92</td></tr>
+        <tr><td style="color:var(--text-muted);font-size:12px">ROCE %</td><td class="right">19.3%</td><td class="right">23.9%</td><td class="right">27.8%</td><td class="right">39.5%</td><td class="right">42.5%</td><td class="right">20.2%</td><td class="right">20.6%</td><td class="right">22.4%</td><td class="right">nm</td></tr>
+        <tr><td style="color:var(--text-muted);font-size:12px">Material Margin</td><td class="right">43.4%</td><td class="right">40.5%</td><td class="right">36.6%</td><td class="right">36.6%</td><td class="right">35.2%</td><td class="right">35.4%</td><td class="right">34.3%</td><td class="right">35.0%</td><td class="right">34.0%</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── COMPANY TAB ── -->
+<div class="tab-content" id="tab-company">
+  <div class="kicker">Company Profile &amp; Governance</div>
+  <h2 class="section-title">About Aeroflex Industries</h2>
+  <p class="section-sub">Master data, board, products under development</p>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Company Information</div>
+      <div class="info-item"><div class="info-key">Company</div><div class="info-val">Aeroflex Industries Limited</div></div>
+      <div class="info-item"><div class="info-key">CIN</div><div class="info-val">L27509MH1993PLC074576</div></div>
+      <div class="info-item"><div class="info-key">Listed On</div><div class="info-val">NSE: AEROFLEX | BSE: 543972</div></div>
+      <div class="info-item"><div class="info-key">Subsidiary</div><div class="info-val">Hyd-Air Engineering Pvt. Ltd. (100%)</div></div>
+      <div class="info-item"><div class="info-key">Corporate Office</div><div class="info-val">12th Floor, Epicentre, Chembur East, Mumbai 400071</div></div>
+      <div class="info-item"><div class="info-key">Website</div><div class="info-val"><a href="https://aeroflexindia.com" target="_blank">aeroflexindia.com ↗</a></div></div>
+      <div class="info-item"><div class="info-key">Annual Report FY25</div><div class="info-val"><a href="https://www.aeroflexindia.com/wp-content/uploads/Annual-Report-FY-2024-2025.pdf" target="_blank">Download PDF ↗</a></div></div>
+      <div class="info-item"><div class="info-key">Screener</div><div class="info-val"><a href="https://www.screener.in/company/AEROFLEX/" target="_blank">screener.in/AEROFLEX ↗</a></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Shareholding Pattern</div>
+      <div class="chart-wrap sm" style="height:180px"><canvas id="shChart"></canvas></div>
+      <div class="sh-list">
+        <div class="sh-item"><div class="sh-dot" style="background:var(--blue)"></div><div class="sh-name">Promoter</div><div class="sh-pct">67.0%</div></div>
+        <div class="sh-item"><div class="sh-dot" style="background:var(--green)"></div><div class="sh-name">Public</div><div class="sh-pct">28.5%</div></div>
+        <div class="sh-item"><div class="sh-dot" style="background:var(--gold)"></div><div class="sh-name">DII</div><div class="sh-pct">3.6%</div></div>
+        <div class="sh-item"><div class="sh-dot" style="background:var(--purple)"></div><div class="sh-name">FII</div><div class="sh-pct">1.0%</div></div>
+      </div>
+    </div>
+  </div>
+  <h3 style="font-family:'DM Serif Display',serif;font-size:16px;margin:20px 0 14px">Board of Directors</h3>
+  <div class="dir-grid">
+    <div class="dir-card"><div class="dir-name">Asad Daud</div><div class="dir-role">Managing Director &amp; Chairman</div><div class="dir-bio">B.Com H.R. College; Masters LSE London. Executive Education IIM &amp; ISB. 14+ years in manufacturing.</div></div>
+    <div class="dir-card"><div class="dir-name">Mustafa Abid Kachwala</div><div class="dir-role">Whole-Time Director &amp; CFO</div><div class="dir-bio">B.Com Mumbai University. 14+ years with Aeroflex managing financial strategy and operations since 2010.</div></div>
+    <div class="dir-card"><div class="dir-name">Harikant G. Turgalia</div><div class="dir-role">Non-Executive Director</div><div class="dir-bio">B.Com Udaipur University. 31+ years management experience. Associated with the Promoter since 2001.</div></div>
+    <div class="dir-card"><div class="dir-name">Shilpa Bhatia</div><div class="dir-role">Independent Director</div><div class="dir-bio">Arts &amp; Law degrees. Practising advocate Bombay High Court, 21+ years.</div></div>
+    <div class="dir-card"><div class="dir-name">Parthasarathi Sarkar</div><div class="dir-role">Independent Director</div><div class="dir-bio">B.Tech IIT Delhi; MBA IIM Ahmedabad. Experience with Unilever, Tata.</div></div>
+    <div class="dir-card"><div class="dir-name">Arpit Khandelwal</div><div class="dir-role">Independent Director</div><div class="dir-bio">CA &amp; CFA. 11 years in risk management, corporate laws, international trade.</div></div>
+  </div>
+  <h3 style="font-family:'DM Serif Display',serif;font-size:16px;margin:20px 0 14px">Products Under Development</h3>
+  <div class="prod-card"><div class="prod-num">1</div><div class="prod-info"><div class="prod-name">Bronze Braided Hose</div><div class="prod-field">HVAC · Fuel Lines · Marine · Cryogenic</div><div class="prod-desc">For refrigeration transmission, cryogenic applications (Liquid N₂/O₂), heat exchangers and industrial ovens.</div></div></div>
+  <div class="prod-card"><div class="prod-num">2</div><div class="prod-info"><div class="prod-name">Monel Hose</div><div class="prod-field">Marine · Chemical · Aerospace · Hydrogen · Oil &amp; Gas</div><div class="prod-desc">Superior corrosion resistance vs SS for Sulphuric acid, seawater. Resistant to hydrogen embrittlement. Up to 538°C.</div></div></div>
+  <div class="prod-card"><div class="prod-num">3</div><div class="prod-info"><div class="prod-name">Hastelloy Hose</div><div class="prod-field">Chemical · Nuclear · Oil &amp; Gas</div><div class="prod-desc">For Sulphuric, Hydrochloric, Phosphoric acids. Withstands up to 1100°C. High pressure &amp; vacuum applications.</div></div></div>
+  <div class="prod-card"><div class="prod-num">4</div><div class="prod-info"><div class="prod-name">High-Pressure Braided Hose (Burst @1600 Bar)</div><div class="prod-field">Aerospace — Space Vehicles / ISRO inspected</div><div class="prod-desc">Non-negotiable pressure rating for space vehicles and hydraulic systems maintaining structural integrity.</div></div></div>
+  <div class="prod-card"><div class="prod-num">5</div><div class="prod-info"><div class="prod-name">Windmill Piping System</div><div class="prod-field">Wind Energy Generation</div><div class="prod-desc">Precision tubes for windmill applications — converting wind to electrical energy.</div></div></div>
+  <div class="prod-card"><div class="prod-num">6</div><div class="prod-info"><div class="prod-name">Hoses with Customised Bend Pipes</div><div class="prod-field">Compressor Applications</div><div class="prod-desc">New compressor designs require custom configuration hose assemblies for changed space &amp; pressure requirements.</div></div></div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// ── CHART DEFAULTS ──
+Chart.defaults.color='#64748b';Chart.defaults.borderColor='#e2e8f0';Chart.defaults.font.family="'DM Sans',sans-serif";Chart.defaults.font.size=11;
+const C={blue:'#2563eb',green:'#059669',gold:'#d97706',red:'#dc2626',purple:'#7c3aed',teal:'#0891b2',slate:'#64748b'};
+const QTRS=['Q1FY26','Q2FY26','Q3FY26'];
+const QTRS_PY=['Q1FY25','Q2FY25','Q3FY25'];
+
+function baseOpts(extra={}){return{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#64748b',boxWidth:12,padding:12,font:{size:11}}},tooltip:{backgroundColor:'#1e293b',borderColor:'#334155',borderWidth:1,titleColor:'#f8fafc',bodyColor:'#94a3b8',padding:10}},scales:{x:{grid:{color:'rgba(226,232,240,0.8)'},ticks:{color:'#64748b'}},y:{grid:{color:'rgba(226,232,240,0.8)'},ticks:{color:'#64748b'}}},...extra}}
+
+// ── STATIC DATA (from Excel) ──
+const DATA={
+  rev:   {q1:84.7, q2:110.9, q3:120.9, h1:195.5, '9m':316.1},
+  revPY: {q1:90.8, q2:95.8,  q3:100.4, h1:186.6, '9m':284.9},
+  ebitda:{q1:15.8, q2:26.1,  q3:28.6,  h1:41.9,  '9m':70.4},
+  em:    {q1:18.7, q2:23.5,  q3:23.6,  h1:21.4,  '9m':22.2},
+  emPY:  {q1:21.1, q2:22.1,  q3:22.2,  h1:21.8,  '9m':21.8},
+  pat:   {q1:7.2,  q2:14.2,  q3:16.5,  h1:21.4,  '9m':37.9},
+  cashpat:{q1:13.1,q2:20.3,  q3:22.8,  h1:33.4,  '9m':56.2},
+  exp:   {q1:71.7, q2:73.6,  q3:73.7,  h1:72.8,  '9m':73.1},
+  dom:   {q1:28.3, q2:26.4,  q3:26.3,  h1:27.2,  '9m':26.9},
+};
+
+// ── BUILD ALL CHARTS ──
+let charts={};
+function buildCharts(){
+  charts.revTrend=new Chart(document.getElementById('revTrendChart'),{type:'bar',
+    data:{labels:['Q1FY26','Q2FY26','Q3FY26'],
+      datasets:[
+        {label:'FY26 (₹ Cr)',data:[84.7,110.9,120.9],backgroundColor:['rgba(59,130,246,0.5)','rgba(59,130,246,0.7)','rgba(59,130,246,0.9)'],borderRadius:4},
+        {label:'FY25 (₹ Cr)',data:[90.8,95.8,100.4],backgroundColor:'rgba(59,130,246,0.2)',borderRadius:4},
+        {label:'QoQ Trend FY26',data:[84.7,110.9,120.9],type:'line',borderColor:C.green,backgroundColor:'transparent',pointBackgroundColor:C.green,tension:0.4,borderWidth:2,pointRadius:5}
+      ]},options:baseOpts()});
+
+  charts.marginTrend=new Chart(document.getElementById('marginTrendChart'),{type:'line',
+    data:{labels:['Q1FY26','Q2FY26','Q3FY26'],
+      datasets:[
+        {label:'EBITDA % FY26',data:[18.7,23.5,23.6],borderColor:C.blue,backgroundColor:'rgba(59,130,246,0.1)',fill:true,tension:0.4,pointRadius:5,borderWidth:2},
+        {label:'EBITDA % FY25',data:[21.1,22.1,22.2],borderColor:C.slate,backgroundColor:'transparent',tension:0.4,pointRadius:4,borderDash:[4,3]},
+        {label:'PAT % FY26',data:[8.5,12.8,13.6],borderColor:C.green,backgroundColor:'transparent',tension:0.4,pointRadius:4},
+        {label:'PAT % FY25',data:[13.7,14.3,15.2],borderColor:C.gold,backgroundColor:'transparent',tension:0.4,pointRadius:4,borderDash:[4,3]}
+      ]},
+    options:baseOpts({scales:{x:{grid:{color:'rgba(226,232,240,0.8)'},ticks:{color:'#64748b'}},y:{grid:{color:'rgba(226,232,240,0.8)'},ticks:{color:'#64748b',callback:v=>v+'%'}}}})});
+
+  charts.patTrend=new Chart(document.getElementById('patTrendChart'),{type:'bar',
+    data:{labels:['Q1FY26','Q2FY26','Q3FY26'],
+      datasets:[
+        {label:'PAT (₹ Cr)',data:[7.2,14.2,16.5],backgroundColor:[C.gold,C.blue,C.green],borderRadius:4},
+        {label:'Cash PAT (₹ Cr)',data:[13.1,20.3,22.8],type:'line',borderColor:C.purple,backgroundColor:'transparent',tension:0.4,pointRadius:4,borderWidth:2}
+      ]},options:baseOpts()});
+
+  charts.expDomTrend=new Chart(document.getElementById('expDomTrendChart'),{type:'line',
+    data:{labels:['Q1FY26','Q2FY26','Q3FY26'],
+      datasets:[
+        {label:'Export %',data:[71.7,73.6,73.7],borderColor:C.blue,backgroundColor:'rgba(59,130,246,0.1)',fill:true,tension:0.4,pointRadius:4},
+        {label:'Domestic %',data:[28.3,26.4,26.3],borderColor:C.green,backgroundColor:'transparent',tension:0.4,pointRadius:4}
+      ]},
+    options:baseOpts({scales:{x:{grid:{color:'rgba(226,232,240,0.8)'},ticks:{color:'#64748b'}},y:{min:0,max:100,grid:{color:'rgba(226,232,240,0.8)'},ticks:{color:'#64748b',callback:v=>v+'%'}}}})});
+
+  charts.prodAllQtr=new Chart(document.getElementById('prodAllQtrChart'),{type:'bar',
+    data:{labels:['Q1FY26','Q2FY26','Q3FY26'],
+      datasets:[
+        {label:'SS Hoses',data:[37.8,49.9,52.9],backgroundColor:C.blue,borderRadius:3,stack:'s'},
+        {label:'Assemblies',data:[37.5,44.9,52.0],backgroundColor:C.green,borderRadius:3,stack:'s'},
+        {label:'Hyd Air',data:[5.1,9.2,8.2],backgroundColor:C.gold,borderRadius:3,stack:'s'},
+        {label:'Others',data:[1.0,1.0,4.6],backgroundColor:C.purple,borderRadius:3,stack:'s'}
+      ]},options:baseOpts()});
+
+  charts.expDomAll=new Chart(document.getElementById('expDomAllChart'),{type:'bar',
+    data:{labels:['Q1FY26','Q2FY26','Q3FY26','Q1FY25','Q2FY25','Q3FY25'],
+      datasets:[
+        {label:'Export %',data:[71.7,73.6,73.7,80.8,81.8,68.2],backgroundColor:(ctx)=>ctx.dataIndex<3?'rgba(59,130,246,0.85)':'rgba(59,130,246,0.25)',borderRadius:3},
+        {label:'Domestic %',data:[28.3,26.4,26.3,19.2,18.2,31.8],backgroundColor:(ctx)=>ctx.dataIndex<3?'rgba(16,185,129,0.85)':'rgba(16,185,129,0.25)',borderRadius:3}
+      ]},options:baseOpts()});
+
+  charts.industry=new Chart(document.getElementById('industryChart'),{type:'doughnut',
+    data:{labels:['Ports & Terminals','Steel & Metals','New Age','Oil & Gas','Petrochemicals','Others'],
+      datasets:[{data:[25.8,22.9,16.7,12.6,9.1,13.0],backgroundColor:[C.blue,C.green,C.gold,C.teal,C.purple,C.slate],borderWidth:0,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{position:'right',labels:{color:'#64748b',boxWidth:10,padding:10,font:{size:11}}},tooltip:{backgroundColor:'#1e293b',borderColor:'#334155',borderWidth:1,titleColor:'#f8fafc',bodyColor:'#94a3b8',padding:10,callbacks:{label:ctx=>` ${ctx.label}: ${ctx.raw}%`}}}}});
+
+  charts.geoAllQtr=new Chart(document.getElementById('geoAllQtrChart'),{type:'bar',
+    data:{labels:['Americas','Europe','Asia','Africa','Others'],
+      datasets:[
+        {label:'Q3FY26',data:[58.4,29.8,10.2,0.8,0.9],backgroundColor:'rgba(59,130,246,0.9)',borderRadius:3},
+        {label:'Q2FY26',data:[59.8,24.5,13.5,1.4,0.8],backgroundColor:'rgba(59,130,246,0.55)',borderRadius:3},
+        {label:'Q1FY26',data:[59.4,22.5,11.7,5.3,1.1],backgroundColor:'rgba(59,130,246,0.3)',borderRadius:3}
+      ]},
+    options:baseOpts({scales:{x:{grid:{color:'rgba(226,232,240,0.8)'},ticks:{color:'#64748b'}},y:{grid:{color:'rgba(226,232,240,0.8)'},ticks:{color:'#64748b',callback:v=>v+'%'}}}})});
+
+  charts.capex=new Chart(document.getElementById('capexChart'),{type:'bar',
+    data:{labels:['Hose Division','Metal Bellows','Liquid Cooling','Hyd Air'],
+      datasets:[
+        {label:'Budget (₹ Cr)',data:[54,10.5,48,18],backgroundColor:'rgba(59,130,246,0.18)',borderRadius:4},
+        {label:'Done in Q3',data:[8.87,1.14,6.30,4.69],backgroundColor:'rgba(59,130,246,0.5)',borderRadius:4,stack:'done'},
+        {label:'Done in Q2',data:[6.40,2.03,1.50,0.78],backgroundColor:'rgba(59,130,246,0.7)',borderRadius:4,stack:'done'},
+        {label:'Done in Q1',data:[6.77,1.74,1.30,0.48],backgroundColor:'rgba(59,130,246,0.9)',borderRadius:4,stack:'done'}
+      ]},options:baseOpts()});
+
+  charts.wc=new Chart(document.getElementById('wcChart'),{type:'line',
+    data:{labels:['Q1FY26','Q2FY26','Q3FY26'],
+      datasets:[
+        {label:'Receivable Days',data:[124.0,97.1,99.9],borderColor:C.blue,tension:0.4,pointRadius:5},
+        {label:'Inventory Days',data:[120.1,99.4,100.7],borderColor:C.gold,tension:0.4,pointRadius:5},
+        {label:'Payable Days',data:[105.2,96.8,106.0],borderColor:C.green,tension:0.4,pointRadius:5},
+        {label:'Net WC Days',data:[161.8,124.5,112.9],borderColor:C.purple,tension:0.4,pointRadius:5,borderWidth:2,borderDash:[5,3]}
+      ]},options:baseOpts()});
+
+  charts.histRev=new Chart(document.getElementById('histRevChart'),{type:'bar',
+    data:{labels:['FY18','FY19','FY20','FY21','FY22','FY23','FY24','FY25','9MFY26'],
+      datasets:[
+        {label:'Revenue (₹ Cr)',data:[113.6,140.4,144.3,144.8,240.8,269.5,317.9,376.2,316.1],backgroundColor:(ctx)=>ctx.dataIndex===8?'rgba(59,130,246,0.9)':'rgba(59,130,246,0.45)',borderRadius:4,yAxisID:'y'},
+        {label:'EBITDA Margin %',data:[8.7,16.6,15.5,15.5,19.5,19.7,20.7,21.7,22.3],type:'line',borderColor:C.green,backgroundColor:'transparent',pointBackgroundColor:C.green,tension:0.4,borderWidth:2,pointRadius:4,yAxisID:'y1'}
+      ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#64748b',boxWidth:12,padding:14}},tooltip:{backgroundColor:'#1e293b',borderColor:'#334155',borderWidth:1,titleColor:'#f8fafc',bodyColor:'#94a3b8',padding:10}},scales:{x:{grid:{color:'rgba(226,232,240,0.8)'},ticks:{color:'#64748b'}},y:{grid:{color:'rgba(226,232,240,0.8)'},ticks:{color:'#64748b',callback:v=>'₹'+v}},y1:{position:'right',grid:{drawOnChartArea:false},ticks:{color:'#059669',callback:v=>v+'%'}}}}});
+
+  charts.sh=new Chart(document.getElementById('shChart'),{type:'doughnut',
+    data:{labels:['Promoter','Public','DII','FII'],datasets:[{data:[67.0,28.5,3.6,1.0],backgroundColor:[C.blue,C.green,C.gold,C.purple],borderWidth:0,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e293b',borderColor:'#334155',borderWidth:1,titleColor:'#f8fafc',bodyColor:'#94a3b8',padding:10,callbacks:{label:ctx=>` ${ctx.label}: ${ctx.raw}%`}}}}});
+}
+
+// ── NAV & TABS ──
+function switchTab(id,btn){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+function showFinTab(id,btn){
+  ['q3q','q2q','q1q','9mq','h1q'].forEach(t=>{document.getElementById('fin-'+t).style.display='none'});
+  document.getElementById('fin-'+id).style.display='block';
+  document.querySelectorAll('.inner-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── QUARTER SELECTOR ──
+let activeQtr='Q3FY26';
+
+// Quarter config — label must exactly match the card-title text in the HTML
+const QTR_DATA = {
+  'Q3FY26': { label:'Q3 FY26', finTab:'q3q', chartIdx:2 },
+  'Q2FY26': { label:'Q2 FY26', finTab:'q2q', chartIdx:1 },
+  'Q1FY26': { label:'Q1 FY26', finTab:'q1q', chartIdx:0 },
+  '9MFY26': { label:'9M FY26', finTab:'9mq', chartIdx:null },
+  'H1FY26': { label:'H1 FY26', finTab:'h1q', chartIdx:null },
+};
+
+function selectQtr(qtr, btn) {
+  activeQtr = qtr;
+  const d = QTR_DATA[qtr];
+  if (!d) return;
+
+  // 1. Toggle quarter bar buttons
+  document.querySelectorAll('.qtr-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  // 2. Highlight matching KPI card in Summary — match by card-title text
+  document.querySelectorAll('#tab-summary .grid-5 .card').forEach(card => {
+    card.classList.remove('q3-highlight');
+    card.style.border = '1px solid #e2e8f0';
+    card.style.boxShadow = '';
+    card.style.transition = 'border 0.2s, box-shadow 0.2s';
+    const titleEl = card.querySelector('.card-title');
+    if (titleEl && titleEl.textContent.trim() === d.label) {
+      card.classList.add('q3-highlight');
+      card.style.border = '2px solid var(--blue)';
+      card.style.boxShadow = '0 0 0 4px rgba(59,130,246,0.1)';
+    }
+  });
+
+  // 3. Switch Financials inner sub-tab
+  document.querySelectorAll('#tab-financials .inner-tab').forEach(b => b.classList.remove('active'));
+  const finBtn = document.querySelector('#tab-financials .inner-tab[onclick*="' + d.finTab + '"]');
+  if (finBtn) finBtn.classList.add('active');
+  ['q3q','q2q','q1q','9mq','h1q'].forEach(t => {
+    const el = document.getElementById('fin-' + t);
+    if (el) el.style.display = 'none';
+  });
+  const finPane = document.getElementById('fin-' + d.finTab);
+  if (finPane) finPane.style.display = 'block';
+
+  // 4. Highlight bar in Revenue Trend chart
+  if (charts.revTrend && d.chartIdx !== null) {
+    charts.revTrend.data.datasets[0].backgroundColor = [0,1,2].map(i =>
+      i === d.chartIdx ? 'rgba(59,130,246,0.95)' : 'rgba(59,130,246,0.28)'
+    );
+    charts.revTrend.update();
+  } else if (charts.revTrend) {
+    charts.revTrend.data.datasets[0].backgroundColor = [
+      'rgba(59,130,246,0.5)', 'rgba(59,130,246,0.7)', 'rgba(59,130,246,0.9)'
+    ];
+    charts.revTrend.update();
+  }
+
+  // 5. Highlight point in Margin Trend chart
+  if (charts.marginTrend && d.chartIdx !== null) {
+    charts.marginTrend.data.datasets[0].pointRadius = [0,1,2].map(i => i === d.chartIdx ? 9 : 4);
+    charts.marginTrend.data.datasets[0].pointBorderColor = [0,1,2].map(i => i === d.chartIdx ? '#fff' : C.blue);
+    charts.marginTrend.data.datasets[0].pointBorderWidth = [0,1,2].map(i => i === d.chartIdx ? 2 : 0);
+    charts.marginTrend.update();
+  }
+
+  // 6. Toast
+  showToast('📅 Viewing ' + d.label);
+}
+
+function showToast(msg) {
+  let t = document.getElementById('qtr-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'qtr-toast';
+    t.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#1e293b;border:1px solid rgba(37,99,235,0.4);color:#f8fafc;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:500;z-index:9998;transition:opacity 0.4s;box-shadow:0 8px 24px rgba(0,0,0,0.2);pointer-events:none';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity = '0'; }, 2200);
+}
+
+// ── HELPERS ──
+function set(id,val){const el=document.getElementById(id);if(el)el.textContent=val}
+function fmt(v,decimals=1){return typeof v==='number'?v.toFixed(decimals):v}
+function pctFmt(v){return fmt(v)+'%'}
+function crFmt(v){return '₹'+fmt(v)+' Cr'}
+function yoyBadge(id,cur,prev){
+  const el=document.getElementById(id);if(!el)return;
+  const chg=prev?(cur-prev)/Math.abs(prev)*100:0;
+  const up=chg>=0;
+  el.textContent=(up?'↑ ':'↓ ')+Math.abs(chg).toFixed(1)+'% YoY';
+  el.className='badge '+(up?'up':'down');
+}
+function yoyPct(cur,prev){if(!prev)return'—';const v=(cur-prev)/Math.abs(prev)*100;return(v>=0?'+':'')+v.toFixed(1)+'%'}
+
+// ── GOOGLE SHEETS LIVE FETCH ──
+let SHEET_ID='',liveMode=false;
+
+function directURL(sheet){return`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}`}
+async function tryDirect(s){const r=await fetch(directURL(s),{mode:'cors'});if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.text()}
+async function tryProxy1(s){const r=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(directURL(s))}`);if(!r.ok)throw new Error();const j=await r.json();if(!j.contents)throw new Error();return j.contents}
+async function tryProxy2(s){const r=await fetch(`https://corsproxy.io/?${encodeURIComponent(directURL(s))}`);if(!r.ok)throw new Error();return r.text()}
+async function fetchSheet(s){
+  for(const fn of[tryDirect,tryProxy1,tryProxy2]){
+    try{const t=await fn(s);if(t&&t.length>10)return parseCSV(t)}catch(e){}
+  }
+  throw new Error('All fetch strategies failed for "'+s+'"');
+}
+function parseCSV(text){
+  const rows=[];
+  for(const line of text.split('\n')){
+    const row=[];let cell='',inQ=false;
+    for(const ch of line){if(ch==='"'){inQ=!inQ}else if(ch===','&&!inQ){row.push(cell.trim());cell=''}else{cell+=ch}}
+    row.push(cell.trim());rows.push(row);
+  }
+  return rows;
+}
+function n(rows,r,c){return parseFloat((rows?.[r]?.[c]??'').replace(/[₹,%\s]/g,''))||0}
+
+// ── MAIN REFRESH ──
+// Dashboard sheet column mapping (0-indexed):
+// Col 2=Q3FY26, Col 3=Q3FY25, Col 4=Q3YoYVal, Col 5=Q3YoY%
+// Col 8=9MFY26, Col 9=9MFY25
+// Col 14=Q2FY26, Col 15=Q2FY25
+// Col 20=H1FY26, Col 21=H1FY25
+// Col 26=Q1FY26, Col 27=Q1FY25
+
+async function refreshDashboard(){
+  if(!liveMode||!SHEET_ID)return;
+  setStatus('loading','Fetching all quarters data…');
+  try{
+    // ── Dashboard sheet (has all quarters) ──
+    const d=await fetchSheet('Dashboard');
+
+    // Sales Total (row 7)
+    const rev={q3:n(d,7,2),q3py:n(d,7,3),nm:n(d,7,8),nmpy:n(d,7,9),q2:n(d,7,14),q2py:n(d,7,15),h1:n(d,7,20),h1py:n(d,7,21),q1:n(d,7,26),q1py:n(d,7,27)};
+
+    // Financial Highlights rows (rows 47-55)
+    const ti={q3:n(d,47,2),q3py:n(d,47,3),nm:n(d,47,8),nmpy:n(d,47,9),q2:n(d,47,14),q2py:n(d,47,15),h1:n(d,47,20),h1py:n(d,47,21),q1:n(d,47,26),q1py:n(d,47,27)};
+    const eb={q3:n(d,48,2),q3py:n(d,48,3),nm:n(d,48,8),nmpy:n(d,48,9),q2:n(d,48,14),q2py:n(d,48,15),h1:n(d,48,20),h1py:n(d,48,21),q1:n(d,48,26),q1py:n(d,48,27)};
+    const em={q3:n(d,49,2),nm:n(d,49,8),q2:n(d,49,14),h1:n(d,49,20),q1:n(d,49,26)};
+    const pbt={q3:n(d,50,2),q3py:n(d,50,3),nm:n(d,50,8),nmpy:n(d,50,9),q2:n(d,50,14),q2py:n(d,50,15),h1:n(d,50,20),h1py:n(d,50,21),q1:n(d,50,26),q1py:n(d,50,27)};
+    const pat={q3:n(d,52,2),q3py:n(d,52,3),nm:n(d,52,8),nmpy:n(d,52,9),q2:n(d,52,14),q2py:n(d,52,15),h1:n(d,52,20),h1py:n(d,52,21),q1:n(d,52,26),q1py:n(d,52,27)};
+    const cpt={q3:n(d,54,2),nm:n(d,54,8),q2:n(d,54,14),h1:n(d,54,20),q1:n(d,54,26)};
+
+    // Product mix rows (rows 2-6)
+    const hose={q3:n(d,2,2),q3py:n(d,2,3),nm:n(d,2,8),nmpy:n(d,2,9),q2:n(d,2,14),q2py:n(d,2,15),q1:n(d,2,26)};
+    const asm= {q3:n(d,3,2),q3py:n(d,3,3),nm:n(d,3,8),nmpy:n(d,3,9),q2:n(d,3,14),q2py:n(d,3,15),q1:n(d,3,26)};
+    const hyd= {q3:n(d,6,2),q3py:n(d,6,3),nm:n(d,6,8),q2:n(d,6,14),q1:n(d,6,26)};
+    const bw=  {q3:n(d,4,2),nm:n(d,4,8),q2:n(d,4,14),q1:n(d,4,26)};
+    const dc=  {q3:n(d,5,2),nm:n(d,5,8)};
+
+    // Export/Domestic (rows 17/18)
+    const exp={q3:n(d,17,2),nm:n(d,17,8),q2:n(d,17,14),h1:n(d,17,20),q1:n(d,17,26)};
+    const dom={q3:n(d,18,2),nm:n(d,18,8),q2:n(d,18,14),h1:n(d,18,20),q1:n(d,18,26)};
+
+    // ── UPDATE SUMMARY CARDS ──
+    set('sum-rev-q3', crFmt(rev.q3));set('sum-rev-q2', crFmt(rev.q2));set('sum-rev-q1', crFmt(rev.q1));
+    set('sum-rev-h1', crFmt(rev.h1));set('sum-rev-9m', crFmt(rev.nm));
+    set('sum-ebitda-q3',crFmt(eb.q3));set('sum-ebitda-q2',crFmt(eb.q2));set('sum-ebitda-q1',crFmt(eb.q1));
+    set('sum-ebitda-h1',crFmt(eb.h1));set('sum-ebitda-9m',crFmt(eb.nm));
+    set('sum-pat-q3',crFmt(pat.q3));set('sum-pat-q2',crFmt(pat.q2));set('sum-pat-q1',crFmt(pat.q1));
+    set('sum-pat-h1',crFmt(pat.h1));set('sum-pat-9m',crFmt(pat.nm));
+    if(ti.q3){set('sum-em-q3',pctFmt(em.q3*100));set('sum-em-q2',pctFmt(em.q2*100));set('sum-em-q1',pctFmt(em.q1*100));set('sum-em-h1',pctFmt(em.h1*100));set('sum-em-9m',pctFmt(em.nm*100));}
+    yoyBadge('sum-rev-q3-yoy',rev.q3,rev.q3py);yoyBadge('sum-rev-q2-yoy',rev.q2,rev.q2py);yoyBadge('sum-rev-q1-yoy',rev.q1,rev.q1py);
+    yoyBadge('sum-rev-h1-yoy',rev.h1,rev.h1py);yoyBadge('sum-rev-9m-yoy',rev.nm,rev.nmpy);
+
+    // ── UPDATE ALL-QUARTERS TABLE ──
+    set('aq-hose-q3',fmt(hose.q3));set('aq-hose-q2',fmt(hose.q2));set('aq-hose-q1',fmt(hose.q1));set('aq-hose-9m',fmt(hose.nm));
+    set('aq-hose-q3-yoy',yoyPct(hose.q3,hose.q3py));set('aq-hose-q2-yoy',yoyPct(hose.q2,hose.q2py));set('aq-hose-q1-yoy',yoyPct(hose.q1,hose.q3py));
+    set('aq-asm-q3',fmt(asm.q3));set('aq-asm-q2',fmt(asm.q2));set('aq-asm-q1',fmt(asm.q1));set('aq-asm-9m',fmt(asm.nm));
+    set('aq-hyd-q3',fmt(hyd.q3));set('aq-hyd-q2',fmt(hyd.q2));set('aq-hyd-q1',fmt(hyd.q1));set('aq-hyd-9m',fmt(hyd.nm));
+    set('aq-bw-q3',fmt(bw.q3));set('aq-bw-q2',fmt(bw.q2));set('aq-bw-q1',fmt(bw.q1));set('aq-bw-9m',fmt(bw.nm));
+    set('aq-dc-q3',fmt(dc.q3));set('aq-dc-9m',fmt(dc.nm));
+    set('aq-rev-q3',fmt(rev.q3));set('aq-rev-q2',fmt(rev.q2));set('aq-rev-q1',fmt(rev.q1));set('aq-rev-9m',fmt(rev.nm));
+    set('aq-rev-q3-yoy',yoyPct(rev.q3,rev.q3py));set('aq-rev-q2-yoy',yoyPct(rev.q2,rev.q2py));set('aq-rev-q1-yoy',yoyPct(rev.q1,rev.q1py));set('aq-rev-9m-yoy',yoyPct(rev.nm,rev.nmpy));
+
+    set('aq-ti-q3',fmt(ti.q3));set('aq-ti-q2',fmt(ti.q2));set('aq-ti-q1',fmt(ti.q1));set('aq-ti-9m',fmt(ti.nm));
+    set('aq-ti-q3-yoy',yoyPct(ti.q3,ti.q3py));set('aq-ti-q2-yoy',yoyPct(ti.q2,ti.q2py));set('aq-ti-q1-yoy',yoyPct(ti.q1,ti.q1py));set('aq-ti-9m-yoy',yoyPct(ti.nm,ti.nmpy));
+
+    set('aq-ebitda-q3',fmt(eb.q3));set('aq-ebitda-q2',fmt(eb.q2));set('aq-ebitda-q1',fmt(eb.q1));set('aq-ebitda-9m',fmt(eb.nm));
+    set('aq-ebitda-q3-yoy',yoyPct(eb.q3,eb.q3py));set('aq-ebitda-q2-yoy',yoyPct(eb.q2,eb.q2py));set('aq-ebitda-q1-yoy',yoyPct(eb.q1,eb.q1py));set('aq-ebitda-9m-yoy',yoyPct(eb.nm,eb.nmpy));
+
+    if(em.q3){set('aq-em-q3',pctFmt(em.q3*100));set('aq-em-q2',pctFmt(em.q2*100));set('aq-em-q1',pctFmt(em.q1*100));set('aq-em-9m',pctFmt(em.nm*100));}
+    set('aq-pbt-q3',fmt(pbt.q3));set('aq-pbt-q2',fmt(pbt.q2));set('aq-pbt-q1',fmt(pbt.q1));set('aq-pbt-9m',fmt(pbt.nm));
+    if(ti.q3){
+      const pm=v=>ti.q3?(v/ti.q3*100):0;
+      set('aq-pbm-q3',pctFmt(pbt.q3/ti.q3*100));set('aq-pbm-q2',pctFmt(pbt.q2/ti.q2*100));
+      set('aq-pbm-q1',pctFmt(pbt.q1/ti.q1*100));set('aq-pbm-9m',pctFmt(pbt.nm/ti.nm*100));
+    }
+    set('aq-pat-q3',fmt(pat.q3));set('aq-pat-q2',fmt(pat.q2));set('aq-pat-q1',fmt(pat.q1));set('aq-pat-9m',fmt(pat.nm));
+    set('aq-pat-q3-yoy',yoyPct(pat.q3,pat.q3py));set('aq-pat-q2-yoy',yoyPct(pat.q2,pat.q2py));set('aq-pat-q1-yoy',yoyPct(pat.q1,pat.q1py));set('aq-pat-9m-yoy',yoyPct(pat.nm,pat.nmpy));
+    if(ti.q3){set('aq-pm-q3',pctFmt(pat.q3/ti.q3*100));set('aq-pm-q2',pctFmt(pat.q2/ti.q2*100));set('aq-pm-q1',pctFmt(pat.q1/ti.q1*100));set('aq-pm-9m',pctFmt(pat.nm/ti.nm*100));}
+    set('aq-cp-q3',fmt(cpt.q3));set('aq-cp-q2',fmt(cpt.q2));set('aq-cp-q1',fmt(cpt.q1));set('aq-cp-9m',fmt(cpt.nm));
+    if(ti.q3){set('aq-cpm-q3',pctFmt(cpt.q3/ti.q3*100));set('aq-cpm-q2',pctFmt(cpt.q2/ti.q2*100));set('aq-cpm-q1',pctFmt(cpt.q1/ti.q1*100));set('aq-cpm-9m',pctFmt(cpt.nm/ti.nm*100));}
+
+    // Export/Dom mix
+    set('aq-exp-q3',pctFmt(exp.q3*100));set('aq-exp-q2',pctFmt(exp.q2*100));set('aq-exp-q1',pctFmt(exp.q1*100));set('aq-exp-9m',pctFmt(exp.nm*100));
+    set('aq-dom-q3',pctFmt(dom.q3*100));set('aq-dom-q2',pctFmt(dom.q2*100));set('aq-dom-q1',pctFmt(dom.q1*100));set('aq-dom-9m',pctFmt(dom.nm*100));
+
+    // Product mix %
+    if(rev.q3>0){
+      set('aq-hm-q3',pctFmt(hose.q3/rev.q3*100));set('aq-hm-q2',pctFmt(hose.q2/rev.q2*100));set('aq-hm-q1',pctFmt(hose.q1/rev.q1*100));set('aq-hm-9m',pctFmt(hose.nm/rev.nm*100));
+      set('aq-am-q3',pctFmt(asm.q3/rev.q3*100));set('aq-am-q2',pctFmt(asm.q2/rev.q2*100));set('aq-am-q1',pctFmt(asm.q1/rev.q1*100));set('aq-am-9m',pctFmt(asm.nm/rev.nm*100));
+      set('aq-hydm-q3',pctFmt(hyd.q3/rev.q3*100));set('aq-hydm-q2',pctFmt(hyd.q2/rev.q2*100));set('aq-hydm-q1',pctFmt(hyd.q1/rev.q1*100));set('aq-hydm-9m',pctFmt(hyd.nm/rev.nm*100));
+    }
+
+    // Update summary charts
+    charts.revTrend.data.datasets[0].data=[rev.q1,rev.q2,rev.q3];
+    charts.revTrend.data.datasets[1].data=[rev.q1py,rev.q2py,rev.q3py];
+    charts.revTrend.data.datasets[2].data=[rev.q1,rev.q2,rev.q3];
+    charts.revTrend.update();
+    if(em.q3){charts.marginTrend.data.datasets[0].data=[em.q1*100,em.q2*100,em.q3*100];charts.marginTrend.update();}
+    charts.patTrend.data.datasets[0].data=[pat.q1,pat.q2,pat.q3];
+    charts.patTrend.data.datasets[1].data=[cpt.q1,cpt.q2,cpt.q3];
+    charts.patTrend.update();
+    charts.expDomTrend.data.datasets[0].data=[exp.q1*100,exp.q2*100,exp.q3*100];
+    charts.expDomTrend.data.datasets[1].data=[dom.q1*100,dom.q2*100,dom.q3*100];
+    charts.expDomTrend.update();
+    charts.prodAllQtr.data.datasets[0].data=[hose.q1,hose.q2,hose.q3];
+    charts.prodAllQtr.data.datasets[1].data=[asm.q1,asm.q2,asm.q3];
+    charts.prodAllQtr.data.datasets[2].data=[hyd.q1,hyd.q2,hyd.q3];
+    charts.prodAllQtr.update();
+
+    // ── Q3FY26 Results sheet (detailed P&L) ──
+    const fin=await fetchSheet('Q3FY26 Results');
+    if(fin){
+      const revQ3L=n(fin,7,9);const revQ2L=n(fin,7,10);const revPYL=n(fin,7,12);const rev9mL=n(fin,7,13);
+      const ebQ3L=n(fin,11,9);const ebQ2L=n(fin,11,10);const ebPYL=n(fin,11,12);const eb9mL=n(fin,11,13);
+      const pbtQ3L=n(fin,15,9);const pbtPYL=n(fin,15,12);const pbt9mL=n(fin,15,13);
+      const patQ3L=n(fin,19,9);const patQ2L=n(fin,19,10);const patPYL=n(fin,19,12);const pat9mL=n(fin,19,13);
+      const cpQ3L=n(fin,22,9);const depQ3L=n(fin,16,9);const taxQ3L=n(fin,18,9);
+      const matQ3L=n(fin,12,9);const empQ3L=n(fin,14,9);const othQ3L=n(fin,17,9);const oiQ3L=n(fin,8,9);const tiQ3L=n(fin,9,9);
+
+      const L=v=>v.toLocaleString('en-IN',{maximumFractionDigits:0});
+      const P=v=>(v*100).toFixed(1)+'%';
+
+      // Q3 P&L table
+      set('t3-rev',L(revQ3L));set('t3-rev-q2',L(revQ2L));set('t3-rev-py',L(revPYL));
+      set('t3-ebitda',L(ebQ3L));set('t3-pbt',L(pbtQ3L));set('t3-pat',L(patQ3L));set('t3-cashpat',L(cpQ3L));
+      set('t3-dep',L(depQ3L));set('t3-tax',L(taxQ3L));set('t3-mat',L(matQ3L));set('t3-emp',L(empQ3L));
+      set('t3-oth',L(othQ3L));set('t3-oi',L(oiQ3L));set('t3-ti',L(tiQ3L));
+      if(revQ3L){set('t3-em',P(ebQ3L/revQ3L));set('t3-pbm',P(pbtQ3L/revQ3L));set('t3-pm',P(patQ3L/revQ3L));
+        set('t3-matm',P(1-matQ3L/revQ3L));set('t3-empc',P(empQ3L/revQ3L));
+        set('f3-rev',L(revQ3L));set('f3-ebitda',L(ebQ3L));set('f3-pbt',L(pbtQ3L));set('f3-pat',L(patQ3L));
+        set('f3-em',P(ebQ3L/revQ3L));set('f3-pbm',P(pbtQ3L/revQ3L));set('f3-pm',P(patQ3L/revQ3L));
+      }
+      yoyBadge('t3-rev-yoy',revQ3L,revPYL);yoyBadge('t3-ebitda-yoy',ebQ3L,ebPYL);yoyBadge('t3-pbt-yoy',pbtQ3L,pbtPYL);yoyBadge('t3-pat-yoy',patQ3L,patPYL);
+      yoyBadge('f3-rev-yoy',revQ3L,revPYL);yoyBadge('f3-ebitda-yoy',ebQ3L,ebPYL);yoyBadge('f3-pbt-yoy',pbtQ3L,pbtPYL);yoyBadge('f3-pat-yoy',patQ3L,patPYL);
+
+      // 9M P&L tab
+      set('f9-rev',L(rev9mL));set('f9-ebitda',L(eb9mL));set('f9-pbt',L(pbt9mL));set('f9-pat',L(pat9mL));
+      set('t9-rev',L(rev9mL));set('t9-ebitda',L(eb9mL));set('t9-pbt',L(pbt9mL));set('t9-pat',L(pat9mL));
+      if(rev9mL){set('t9-em',P(eb9mL/rev9mL));set('t9-pbm',P(pbt9mL/rev9mL));set('t9-pm',P(patQ3L/rev9mL));}
+
+      // Ticker
+      set('tk-rev-q3',crFmt(revQ3L/100));set('tk-rev-9m',crFmt(rev9mL/100));
+    }
+
+    // ── QFY26 Results (Q2 & H1) ──
+    const q2fin=await fetchSheet('QFY26 Results');
+    if(q2fin){
+      const revQ2L=n(q2fin,10,2);const revQ1L=n(q2fin,10,3);const revQ2PYL=n(q2fin,10,4);const revH1L=n(q2fin,10,5);const revH1PYL=n(q2fin,10,6);
+      const ebQ2L=n(q2fin,13,9);const ebQ1L=n(q2fin,13,10);
+      const pbtQ2L=n(q2fin,17,9);const pbtQ1L=n(q2fin,17,10);
+      const patQ2L=n(q2fin,21,9);const patQ1L=n(q2fin,21,10);const patH1L=n(q2fin,21,5);
+      const cpQ2L=n(q2fin,24,9);const cpQ1L=n(q2fin,24,10);const cpH1L=n(q2fin,24,5);
+      const pbtH1L=n(q2fin,17,5);const ebH1L=n(q2fin,13,5);
+
+      const L=v=>v.toLocaleString('en-IN',{maximumFractionDigits:0});
+      const P=v=>(v*100).toFixed(1)+'%';
+
+      // Q2 tab
+      set('f2-rev',L(revQ2L));set('f2-ebitda',L(ebQ2L));set('f2-pbt',L(pbtQ2L));set('f2-pat',L(patQ2L));
+      if(revQ2L){set('f2-em',P(ebQ2L/revQ2L));set('f2-pbm',P(pbtQ2L/revQ2L));set('f2-pm',P(patQ2L/revQ2L));}
+      yoyBadge('f2-rev-yoy',revQ2L,revQ2PYL);yoyBadge('f2-pbt-yoy',pbtQ2L,n(q2fin,17,4));yoyBadge('f2-pat-yoy',patQ2L,n(q2fin,21,4));
+      set('t2-rev',L(revQ2L));set('t2-ebitda',L(ebQ2L));set('t2-pbt',L(pbtQ2L));set('t2-pat',L(patQ2L));set('t2-cashpat',L(cpQ2L));
+      set('t2-rev-q1',L(revQ1L));set('t2-rev-py',L(revQ2PYL));
+      if(revQ2L){set('t2-em',P(ebQ2L/revQ2L));set('t2-pbm',P(pbtQ2L/revQ2L));set('t2-pm',P(patQ2L/revQ2L));}
+
+      // Q1 tab
+      set('f1-rev',L(revQ1L));set('f1-ebitda',L(ebQ1L));set('f1-pbt',L(pbtQ1L));set('f1-pat',L(patQ1L));
+      if(revQ1L){set('f1-em',P(ebQ1L/revQ1L));set('f1-pm',P(patQ1L/revQ1L));}
+      yoyBadge('f1-rev-yoy',revQ1L,n(q2fin,10,4));yoyBadge('f1-pbt-yoy',pbtQ1L,n(q2fin,17,4));yoyBadge('f1-pat-yoy',patQ1L,n(q2fin,21,4));
+      set('t1-rev',L(revQ1L));set('t1-ebitda',L(ebQ1L));set('t1-pat',L(patQ1L));set('t1-cashpat',L(cpQ1L));
+      if(revQ1L){set('t1-em',P(ebQ1L/revQ1L));set('t1-pm',P(patQ1L/revQ1L));}
+
+      // H1 tab
+      set('fh-rev',L(revH1L));set('fh-ebitda',L(ebH1L));set('fh-pbt',L(pbtH1L));set('fh-pat',L(patH1L));set('fh-cashpat',L(cpH1L));
+      set('th-rev',L(revH1L));set('th-ebitda',L(ebH1L));set('th-pbt',L(pbtH1L));set('th-pat',L(patH1L));set('th-cashpat',L(cpH1L));
+      if(revH1L){set('fh-em',P(ebH1L/revH1L));}
+
+      // Ticker Q2/Q1
+      set('tk-rev-q2',crFmt(revQ2L/100));set('tk-rev-q1',crFmt(revQ1L/100));
+      set('tk-em-q2',P(ebQ2L/revQ2L));
+    }
+
+    // ── Ratios sheet ──
+    const rat=await fetchSheet('Ratios');
+    if(rat){
+      // Q3=col1, 9M=col5, Q2=col9, H1=col13, Q1=col17
+      const rec={q3:n(rat,1,1),nm:n(rat,1,5),q2:n(rat,1,9),q1:n(rat,1,17),q3py:n(rat,1,2),q2py:n(rat,1,10),q1py:n(rat,1,18)};
+      const inv={q3:n(rat,2,1),nm:n(rat,2,5),q2:n(rat,2,9),q1:n(rat,2,17),q3py:n(rat,2,2),q2py:n(rat,2,10),q1py:n(rat,2,18)};
+      const pay={q3:n(rat,3,1),nm:n(rat,3,5),q2:n(rat,3,9),q1:n(rat,3,17),q3py:n(rat,3,2),q2py:n(rat,3,10),q1py:n(rat,3,18)};
+      const nwc={q3:n(rat,8,1),nm:n(rat,8,5),q2:n(rat,8,9),q1:n(rat,8,17),q3py:n(rat,8,2),q2py:n(rat,8,10),q1py:n(rat,8,18)};
+      const d=(a,b)=>(a-b).toFixed(1);
+      set('rt-rec-q3',fmt(rec.q3));set('rt-rec-q2',fmt(rec.q2));set('rt-rec-q1',fmt(rec.q1));set('rt-rec-9m',fmt(rec.nm));
+      set('rt-rec-q3-d',d(rec.q3,rec.q3py));set('rt-rec-q2-d',d(rec.q2,rec.q2py));set('rt-rec-q1-d',d(rec.q1,rec.q1py));
+      set('rt-inv-q3',fmt(inv.q3));set('rt-inv-q2',fmt(inv.q2));set('rt-inv-q1',fmt(inv.q1));set('rt-inv-9m',fmt(inv.nm));
+      set('rt-inv-q3-d',d(inv.q3,inv.q3py));set('rt-inv-q2-d',d(inv.q2,inv.q2py));set('rt-inv-q1-d',d(inv.q1,inv.q1py));
+      set('rt-pay-q3',fmt(pay.q3));set('rt-pay-q2',fmt(pay.q2));set('rt-pay-q1',fmt(pay.q1));set('rt-pay-9m',fmt(pay.nm));
+      set('rt-pay-q3-d',d(pay.q3,pay.q3py));set('rt-pay-q2-d',d(pay.q2,pay.q2py));set('rt-pay-q1-d',d(pay.q1,pay.q1py));
+      set('rt-nwc-q3',fmt(nwc.q3));set('rt-nwc-q2',fmt(nwc.q2));set('rt-nwc-q1',fmt(nwc.q1));set('rt-nwc-9m',fmt(nwc.nm));
+      set('rt-nwc-q3-d',d(nwc.q3,nwc.q3py));set('rt-nwc-q2-d',d(nwc.q2,nwc.q2py));set('rt-nwc-q1-d',d(nwc.q1,nwc.q1py));
+      charts.wc.data.datasets[0].data=[rec.q1,rec.q2,rec.q3];
+      charts.wc.data.datasets[1].data=[inv.q1,inv.q2,inv.q3];
+      charts.wc.data.datasets[2].data=[pay.q1,pay.q2,pay.q3];
+      charts.wc.data.datasets[3].data=[nwc.q1,nwc.q2,nwc.q3];
+      charts.wc.update();
+    }
+
+    const now=new Date().toLocaleString('en-IN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'});
+    set('live-last-updated','Live · updated '+now);
+    setStatus('live','Connected · all quarters loaded · auto-refreshing every 5 min');
+  }catch(err){
+    console.error('[AIL]',err);
+    setStatus('error','Could not fetch data — will retry. Ensure sheet is published.');
+  }
+}
+
+// ── STATUS BAR ──
+function setStatus(type,msg){
+  const bar=document.getElementById('status-bar');const txt=document.getElementById('status-text');
+  bar.className=type==='live'?'':type==='error'?'error':'loading';bar.classList.remove('hidden');txt.textContent=msg;
+}
+
+// ── SETUP ──
+async function connectSheet(){
+  const input=document.getElementById('sheet-id-input').value.trim();
+  const err=document.getElementById('setup-err');err.style.display='none';
+  let id=input;const m=input.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);if(m)id=m[1];
+  if(!id||id.length<20){err.textContent='⚠ That doesn\'t look like a valid Sheet ID.';err.style.display='block';return}
+  SHEET_ID=id;
+  try{localStorage.setItem('ail_mqd_sheet_id',SHEET_ID)}catch(e){}
+  document.getElementById('setup-overlay').classList.add('hidden');
+  document.getElementById('live-mode-badge').style.display='flex';
+  liveMode=true;
+  await refreshDashboard();
+  setInterval(refreshDashboard,5*60*1000);
+}
+function skipSetup(){document.getElementById('setup-overlay').classList.add('hidden');set('live-last-updated','Static data · not connected')}
+function showSetup(){document.getElementById('setup-overlay').classList.remove('hidden')}
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded',()=>{
+  buildCharts();
+  try{
+    const saved=localStorage.getItem('ail_mqd_sheet_id');
+    if(saved&&saved.length>20){
+      document.getElementById('sheet-id-input').value=saved;
+      SHEET_ID=saved;liveMode=true;
+      document.getElementById('setup-overlay').classList.add('hidden');
+      document.getElementById('live-mode-badge').style.display='flex';
+      refreshDashboard();setInterval(refreshDashboard,5*60*1000);
+    }
+  }catch(e){}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.activeElement.id==='sheet-id-input')connectSheet()});
+</script>
+</body>
+</html>
